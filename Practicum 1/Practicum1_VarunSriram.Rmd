@@ -1,0 +1,449 @@
+---
+title: "R Notebook"
+name: Varun Sriram
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+assignment: Practicum 1 DA 5030
+---
+
+
+
+```{r}
+#PROBLEM 1
+#question 1
+
+#Reading the .csv file
+glass <- read.csv("glass.csv",sep = ",", header = TRUE)
+
+#Adding column names
+colnames(glass)<-c("ID", "RefractiveIndex", "Sodium", "Magnesium", "Aluminium", "Silicon", "Potassium", "Calcium", "Barium", "Iron", "Type")
+
+
+head(glass)
+```
+
+```{r}
+#question 2
+#Getting information of the glass
+summary(glass)
+
+```
+
+```{r}
+#question 3
+#Creating the histogram sodium with normal curve as suggested in the tutorial provided in the question.
+x <- glass$Sodium
+h<-hist(x, breaks=10, col="red", xlab="Sodium stuff",
+   main="Histogram with Normal Curve")
+xfit<-seq(min(x),max(x),length=40)
+yfit<-dnorm(xfit,mean=mean(x),sd=sd(x))
+yfit <- yfit*diff(h$mids[1:2])*length(x)
+lines(xfit, yfit, col="blue", lwd=2) 
+
+
+```
+
+
+```{r}
+
+#question 4
+#Removing ID columns, since it's redundant
+glass <- glass[-1]
+
+#creating a function to normalize using min max method
+normalize <- function(x)
+{
+  return((x-min(x))/(max(x)-min(x)))
+}
+
+#Using min max method to normalize the data for refractive index and sodium
+glass[1:2] <- as.data.frame(lapply(glass[1:2], normalize))
+
+head(glass)
+```
+
+```{r}
+#question 5
+#Taken from R documentation https://www.rdocumentation.org/packages/base/versions/3.5.1/topics/scale 
+#scaling with center = true and scale = true  calculates the z-factor. If scale is TRUE then scaling is done by dividing the (centered) columns of x by their standard deviations if center is TRUE, and the root mean square 
+glass[3:8] <- scale(glass[3:8], center = TRUE, scale = TRUE)
+head(glass)
+
+```
+
+```{r}
+#question 6
+#TypeName <- factor(glass$Type, levels = c("1", "2","3","4","5","6", "7"), labels = c("BWFP", "BWNFP", "VWFP", "VWNFP", "C", "T", "HL"))
+
+#Getting percentage of each glass type from the data set
+round(prop.table(table(glass$Type)) * 100, digits=1)
+#nrow(glass)
+
+library(caret)
+library(lattice)
+#library(ggplot)
+set.seed(99)
+
+#getting indices for data partitioning 
+index <- createDataPartition(y=glass$Type, p=0.5,list=FALSE)
+
+#create training set using index
+glass_training <- glass[index,]
+
+#create test data set using -index = other rows excluding index rows
+glass_test <- glass[-index,]
+
+
+#question 7
+#Function to calculate distance between neighbors
+d <- function(p,q)
+{
+  x<-0
+  for(i in 1:length(p))
+  {
+    x <- x+(p[i]+q[i])^2
+  }
+  d <- sqrt(x)
+}
+
+
+#Function to calculate neighbors
+neighbors <- function(train, u)
+{
+  m <- nrow(train)
+  ds <- numeric(m)
+  q <- as.numeric(u[c(1:9)])
+  for(i in 1:m)
+  {
+    p <- train[i,c(1:9)]
+    ds[i] <- d(p,q)
+  }
+  neighbors <- ds
+}
+
+
+#Function to calculate nearest neighbors
+k.closest <- function(neigh, k)
+{
+  ordered.neigh <- order(as.data.frame(lapply(neigh, unlist)))
+  k.closest <- ordered.neigh[1:k]
+}
+
+#Get mode from the nearest neighbors
+Mode <- function(x)
+{
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x,ux)))]
+}
+
+
+#knn function
+knn_ <- function(train, u, k)
+{
+  nb <- neighbors(train, u)
+  f <- k.closest(nb,k)
+  knn_<-Mode(train$Type[f])
+}
+
+#setting k according to question
+k <- 10
+
+#getting test cases from question
+test1 <- c(1.51621,12.53,3.48,1.39,73.39,0.60,8.55,0.00,0.05)
+test2 <- c(1.5098,12.77,1.85,1.81,72.69,0.59,10.01,0.00,0.01)
+
+#normalizing test cases
+norm_test1 <- normalize(test1)
+norm_test2 <- normalize(test2)
+
+#getting knn for test cases
+ans_test1<- knn_(glass,test1,k)
+ans_test2<- knn_(glass,test2,k)
+
+ans_test1
+ans_test2
+```
+```{r}
+#question 8
+#Using new k val
+newk<-14
+newans_test1<- knn_(glass,test1,newk)
+newans_test2<- knn_(glass,test2,newk)
+
+newans_test1
+newans_test2
+
+```
+
+```{r}
+
+#question 9
+#Performing knn using caret function
+library(class)
+library(gmodels)
+label_training <- glass_training[,10]
+label_test <- glass_test[,10]
+
+set.seed(100)
+glass_test_prediction <- knn(train = glass_training, test= glass_test, cl=label_training, k=14)
+
+#glass_test_prediction
+CrossTable(x=label_test, y =glass_test_prediction, prop.chisq=FALSE)
+
+
+```
+
+```{r}
+
+#question 10
+
+#Function to calculate data frame with data frames
+
+Bigknnfunc <- function(train,test,k)
+{
+  m<-nrow(test)
+  final<-as.numeric(m)
+  for(i in 1:m)
+  {
+  nb <- neighbors(train[,1:9], test[i,1:9])
+  f <- k.closest(nb,k)
+  final[i]<-Mode(train$Type[f])
+  }
+  Bigknnfunc<-final
+}
+
+
+
+#Finding nearest neighbor values for various ks
+knntest5 <- Bigknnfunc(glass_training, glass_test, 5)
+knntest6 <- Bigknnfunc(glass_training, glass_test, 6)
+knntest7 <- Bigknnfunc(glass_training, glass_test, 7)
+knntest8 <- Bigknnfunc(glass_training, glass_test, 8)
+knntest9 <- Bigknnfunc(glass_training, glass_test, 9)
+knntest10 <- Bigknnfunc(glass_training, glass_test, 10)
+knntest11 <- Bigknnfunc(glass_training, glass_test, 11)
+knntest12 <- Bigknnfunc(glass_training, glass_test, 12)
+knntest13 <- Bigknnfunc(glass_training, glass_test, 13)
+knntest14 <- Bigknnfunc(glass_training, glass_test, 14)
+                   
+
+#Function to Check if our predictions are in accordance to the reality (Accuracy). COmparing knn tests and labels. If the predictions are true, 1 is returned and 0 for false.    
+Resultcomparison <- function(prediction, reality)
+{
+  
+  pred <- as.data.frame(prediction)
+  real <- as.data.frame(reality)
+  
+  m<-nrow(real)
+  storebool <- as.numeric(m)
+  
+  for(i in 1:m)
+  {
+    getbool<-ifelse(pred[i,]==real[i,],TRUE,FALSE)
+    storebool[i] <- getbool
+  }
+  Resultcomparison<-storebool
+}
+
+
+#comparing results for each value of K for accuracy
+compare_result5 <- as.data.frame(Resultcomparison(knntest5,label_test))
+compare_result6 <- as.data.frame(Resultcomparison(knntest6,label_test))
+compare_result7 <- as.data.frame(Resultcomparison(knntest7,label_test))
+compare_result8 <- as.data.frame(Resultcomparison(knntest8,label_test))
+compare_result9 <- as.data.frame(Resultcomparison(knntest9,label_test))
+compare_result10 <- as.data.frame(Resultcomparison(knntest10,label_test))
+compare_result11 <- as.data.frame(Resultcomparison(knntest11,label_test))
+compare_result12 <- as.data.frame(Resultcomparison(knntest12,label_test))
+compare_result13 <- as.data.frame(Resultcomparison(knntest13,label_test))
+compare_result14 <- as.data.frame(Resultcomparison(knntest14,label_test))
+#still learning r, so had to use the long way.
+
+#mean in summary shows the accuracy
+summary(compare_result5)
+summary(compare_result6)
+summary(compare_result7)
+summary(compare_result8)
+summary(compare_result9)
+summary(compare_result10)
+summary(compare_result11)
+summary(compare_result12)
+summary(compare_result13)
+summary(compare_result14)
+
+
+#k=13,14 have the highest accuracy
+
+#getting the mean values of all knn for plotting k to accuracy graph
+all_mean <- c(colMeans(compare_result5),colMeans(compare_result6),colMeans(compare_result7),colMeans(compare_result8),colMeans(compare_result9),colMeans(compare_result10),colMeans(compare_result11),colMeans(compare_result12),colMeans(compare_result13),colMeans(compare_result14))
+mean_knn <-  all_mean
+
+k_set <- c(5,6,7,8,9,10,11,12,13,14)
+
+plot(k_set , mean_knn, type = "l", main = "K vs accuracy")
+
+
+
+
+
+
+
+
+
+#question 11
+library(ggplot2)
+
+#Finding error rate = 1 - Accuracy
+error_rate <- c(1-colMeans(compare_result5),1-colMeans(compare_result6),1-colMeans(compare_result7),1-colMeans(compare_result8),1-colMeans(compare_result9),1-colMeans(compare_result10),1-colMeans(compare_result11),1-colMeans(compare_result12),1-colMeans(compare_result13),1-colMeans(compare_result14))
+
+accuracy <- data.frame(k_set,error_rate)
+
+ggplot(data=accuracy, aes(x=factor(k_set),y=error_rate)) + geom_point() + ggtitle("Neighbors and error")
+
+#glass_test$Type
+
+
+
+
+#question 12
+#Getting confusion matrix for accuracy and other stats
+confusionMatrix( as.factor(knntest14),as.factor(label_test) )
+
+
+
+
+
+#question 13
+#Using knnon huge data sets is not the right choice. When n= rows and m= features and both of them are high, the time taken to perform kNN will increase exponentially. 
+#Every loop has a complexity of o(n) Since there are 3 loops in a knn function, and one of the 3 loops is nested, the total time complexity is O(n) +O(n)+ O(n^2) which is very high.
+#When the number of m increases, the data to be checked increases too. 
+#THEREEFORE, kNN is not suitable for big data sets
+```
+
+
+```{r}
+#PROBLEM 2
+
+#Question 1
+house<-read.csv("kc_house_data.csv", sep = ",", header = TRUE)
+
+#head(house)
+#nrow(house)
+#ncol(house)
+#summary(house)
+
+
+#In India(Mumbai) due to overpopulation, there are certain features of houses that are most aimed for purchasing. The price depends on the number of bedrooms(overpopulation) & bathrooms. The sq.ft determines how big the house is( carpet area doesnt matter) since people renovate the extra housing space that doesnt come up in the carpet are. Also, the newer the home, the costlier it is. Mumbai has less areas with waterfronts and all so it will be a minor factor to consider it in mt kNN alg.
+houseforknn<- data.frame(house$price,house$bedrooms,house$bathrooms,house$sqft_living, house$yr_built)
+houseforknn$prizeclass <- 0
+#head(houseforknn)
+
+hrows <- nrow(houseforknn)
+
+
+#Classifying prices into sections depending on their cost. 
+for(i in 1:hrows)
+{
+  houseforknn$prizeclass[i]=ifelse(houseforknn$house.price[i]<250000,"A",ifelse(houseforknn$house.price[i]<500000,"B", ifelse(houseforknn$house.price[i]<750000,"C",ifelse(houseforknn$house.price[i]<1000000,"D",ifelse(houseforknn$house.price[i]<1500000,"E","O" )))))
+
+}
+head(houseforknn)
+
+#TypeName <- factor(glass$Type, levels = c("1", "2","3","4","5","6", "7"), labels = c("BWFP", "BWNFP", "VWFP", "VWNFP", "C", "T", "HL"))
+
+set.seed(1000)
+#data partitioning
+hindex <- createDataPartition(y=houseforknn$prizeclass, p=0.5,list=FALSE)
+
+#create training set using index
+house_training <- houseforknn[hindex,]
+
+#create test data set using -index = other rows excluding index rows
+house_test <- houseforknn[-hindex,]
+
+#normalizing the values
+houseforknn[1:5] <- as.data.frame(lapply(houseforknn[1:5], normalize))
+
+
+#random unknown test data
+htest1 <- c(440000, 3, 2.00, 2200, 1995)
+norm_htest1 <- normalize(htest1)
+
+#finding neighbors in accordance to house data set
+house_neighbors <- function(train, u)
+{
+  m <- nrow(train)
+  ds <- numeric(m)
+  q <- as.numeric(u[c(1:5)])
+  for(i in 1:m)
+  {
+    p <- train[i,c(1:5)]
+    ds[i] <- d(p,q)
+  }
+  house_neighbors <- ds
+}
+
+#finding closest neighbors in accordance to house data set
+k.closest <- function(neigh, k)
+{
+  ordered.neigh <- order(as.data.frame(lapply(neigh, unlist)))
+  k.closest <- ordered.neigh[1:k]
+}
+
+#finding mode in closest neighbors in accordance to house data set
+Mode <- function(x)
+{
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x,ux)))]
+}
+
+
+#kNN in accordance to house data set
+houseknn_ <- function(train, u, k)
+{
+  nb <- house_neighbors(train, u)
+  f <- k.closest(nb,k)
+  houseknn_<-Mode(train$prizeclass[f])
+}
+
+#arbritrary k values
+hk<-9
+ans_htest1<- houseknn_(houseforknn,htest1,hk)
+ans_htest1
+
+
+
+
+#question 2
+#I will evaluate the model by checking mainly the sq.ft and the price ratio. Along with that the secondary attirbute to check would be the number of bedrooms since, home with bedrooms are in demand in Mumbai. If the cost to sqft ratio is constant in all scenarios, I feel that the situation that I've presented for my home town will be validated.
+
+```
+
+```{r}
+
+#PROBLEM 3
+#Question 1
+time <- read.csv("occupancyratestimeseries.csv",sep = ",",header = TRUE)
+
+#head(time)
+
+#getting linear model
+time_model <- lm(time$OccupancyRate ~ time$Period)
+#print(time_model)
+summary(time_model)
+#plot(time_model)
+
+time_model
+forecast167 <- ((167)*0.01510) + 34.94191
+forecast167
+
+
+#forecast calculated is in between 22.75 & 52.13 , which is within the interval
+val<- predict(time_model, newdata = data.frame(Period=167), interval = "predict")
+val
+
+#linear models are mostly accurate in forecasting, but biasing would lead to improper prediction and wouldn't predict outliers.
+
+```

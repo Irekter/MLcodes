@@ -1,0 +1,137 @@
+---
+title: "Assignment 8 DA5030 by Varun Sriram"
+output:
+  html_document:
+    df_print: paged
+name: Varun Sriram
+---
+
+
+```{r}
+#Question 1
+
+#Reaqding the data set from file
+teens <- read.csv("snsdata.csv")
+
+#Exploring the data
+str(teens)
+table(teens$gender) #Excludes N/A values
+table(teens$gender, useNA = "ifany")  #Includes N/A values now
+#You can see that females have 4 times more value than male.
+summary(teens$age)  #Age has N/A values too, also there are people of age 3 and 106 in the data set who are not likely to attend high school. We will clean them up
+
+teens$age <- ifelse(teens$age >= 13 & teens$age < 20, teens$age, NA)  #Considering people with only 13 - 20 age
+
+summary(teens$age)
+
+#Dummy coding forfemale and no gender and with that we can infer that the third person is male if he doesnt fit into both coded categories
+teens$female <- ifelse(teens$gender == "F" &!is.na(teens$gender), 1, 0)
+teens$no_gender <- ifelse(is.na(teens$gender), 1, 0)
+
+
+#Confirming our constructed dummy codes
+table(teens$gender, useNA = "ifany")
+table(teens$female, useNA = "ifany")
+table(teens$no_gender, useNA = "ifany")
+
+
+#Finding mean of age
+mean(teens$age) #Since there are NA values, we wont get the mean
+mean(teens$age, na.rm = TRUE) #using na.rm to get the mean ignoring the mean values
+#Reveals that our avg student data is about 17 years old
+
+
+aggregate(data = teens, age ~ gradyear, mean, na.rm = TRUE) #Getting avg for each individual year
+#Mean age roughly differes by 1 every year, and the output of the function is a data frame
+
+
+#The ave() function, which returns a vector with the group means repeated so that the result is equal in length to the original vector
+ave_age <- ave(teens$age, teens$gradyear, FUN = function(x) mean(x, na.rm = TRUE))
+
+#To impute these means onto the missing values, we need one more ifelse()call to use the ave_age value only if the original age value was NA
+teens$age <- ifelse(is.na(teens$age), ave_age, teens$age)
+
+summary(teens$age)
+
+#start our cluster analysis by considering only the 36 features that represent the number of times various interests appeared on the teen SNS profiles. For simplicity, let's make a data frame containing only these features:
+interests <- teens[5:40]
+
+#Using z-score standardization, rescaling our features for a mean of zero and SD of 1
+interests_z <- as.data.frame(lapply(interests, scale))
+
+#Setting a rondom seed so that we can replicate the results
+set.seed(2345)
+
+#Running the kmeans algorithm on the
+teen_clusters <- kmeans(interests_z, 5) 
+
+#Checking size of each cluster
+teen_clusters$size
+
+#Getting coordinates of cluster centers
+teen_clusters$centers
+
+
+#Applying the clusters back onto the full dataset. The teen_clusters object created by the kmeans() function 
+teens$cluster <- teen_clusters$cluster
+
+#Seeing cluster aqssignments to indivitual characteristics
+teens[1:5, c("cluster", "gender", "age", "friends")]
+
+#Using the aggregate() function, we can also look at the demographic characteristics of the clusters
+aggregate(data = teens, age ~ cluster, mean)
+
+aggregate(data = teens, female ~ cluster, mean)
+
+aggregate(data = teens, friends ~ cluster, mean)
+
+
+
+
+```
+Problem 2:
+
+1. Ways to predict Binary response to model:
+There a number of ways to predict a binary variable. Firstly, I would suggest using decision trees. Decision tree is built by splitting your data into subsets conditionally on the features used. The splits are done by choosing the features, one at a time, and then choosing a split based on the values of the feature. In both cases we make our choices based on some loss function that is minimized.
+The second one is Binay logistic regression, A binomial logistic regression (often referred to simply as logistic regression), predicts the probability that an observation falls into one of two categories of a dichotomous dependent variable based on one or more independent variables that can be either continuous or categorical.
+I feel that decision trees would be a better option since it makes simple decisions based on already set-up conditions other than making a continuous line denoting the probability (logistic regression).
+
+
+
+
+2. Including feweer predictor over many:
+Training error increases as you increase the complexity but at the same time the model's error on test data starts increaing after some point because your model will stop generealizing different data sets anymore. The goal of machine learning is to apply models to a generalized data set and not to a specific data set. This way we can say that too many features in your data set can lead to over fitting. Also, is a situation where there are too many data, imputation becomes a mamoth task. Each feature will have missing values and imputing missing values will become difficult. Plus replacing NA vlaues means making assumptions in the data, which in turn points out to the fact that the data isn't 100% accuracte and it will elad to inconsistencies.
+
+
+
+
+3. Donations of recent alumni
+Donations by alumnis, in my opinion could be predicted by using decision trees. An alumni database will have several backgrounds like, age, income, previous class, years studied in that university etc. So there are several assumptions that I can make here to prove that alumni of the same class, background, friends circle will donate money. So if a particular class has donated a lot, more people would follow that, then if a student has studied int he university for along time then as a sentimental vlaue, he might donate to the university. Conditions like these are super easy to see and can be used to make conditions. So I feel that using decision trees in this scenario would be a better option.
+
+
+
+
+4. R squared and finding better fits
+R-squared is a statistical measure of how close the data are to the fitted regression line. It is also known as the coefficient of determination, or the coefficient of multiple determination for multiple regression.
+The definition of R-squared is fairly straight-forward; it is the percentage of the response variable variation that is explained by a linear model. Or:
+R-squared = Explained variation / Total variation
+R-squared is always between 0 and 100%:
+0% indicates that the model explains none of the variability of the response data around its mean.
+100% indicates that the model explains all the variability of the response data around its mean.
+Adjusted r squared is another method to find a good fit by punishing model rating if you add too many predicting features. 
+The Kappa statistic (or value) is a metric that compares an Observed Accuracy with an Expected Accuracy (random chance). The kappa statistic is used not only to evaluate a single classifier, but also to evaluate classifiers amongst themselves. It is like a negative way to show you the accuracy. This will help to get better fit of models too.
+
+
+5. Checking which models are good for your model
+There are various methods that will help you to achieve the above mentioned statement
+
+a. Forward search and Backward search algorithm :You implement a step-wise regression. Start with a maximal model i.e. y~x1+x2+.... You can represent this as " y~."  (if you are using R). Now do a backwards step regression. Only the important independent variables will be retained. Alternatively, start with a minimal model i.e. y~0. Now do a forward step regression.
+
+b. Use Regularization in your model : Using Regularization in your model is effectively using a feature selection algorithm. It is equivalent to introducing a Gaussian prior on model coefficients which makes most of the predictors contribution equal to zero (from Gaussian's properties). 
+
+c. Tree-based feature selection : It borrows the concept from ensemble trees(Random Forests etc.). In tree based classifier at each node splitting is done based on the "information gain" acheived by a variable and the maximum information gain node is selected, so this information can be used for feature selection also.
+
+d. Use Dimensionality Reduction technique : Dim. Reduction techniques like PCA, Isomp, LLE etc. scans the data to find the dimensions (predictors) which are relevant(in terms of information) and discard uninteresting features.
+
+
+

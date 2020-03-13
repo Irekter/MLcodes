@@ -1,0 +1,83 @@
+---
+title: "R Notebook"
+course: DA5030 Practicum 2
+output:
+  html_document:
+    df_print: paged
+class: Josiah Veloso, Aneesh Karwarkar, Varun Sriram
+---
+
+
+```{r, Question 3}
+#QUESTION 3
+
+#Reading titanic data set
+titanic <- read.csv("titanic_data.csv")
+str(titanic)
+#head(titanic)
+
+#Data set has NA values in age column
+any(is.na(titanic$Age))
+#Age has NA values, so we will impute it with median. The mode is 24, which is not quite possible since the passengers seems to be older than usual and the people are ususally old in a cruise party. The mean will give us decimal values which is quite unsatisfactory as age generally isnt calclulated in decimal values.SO we will use median value to impute NA age values
+
+medoftitanic <- median(titanic$Age, na.rm=T)
+medoftitanic
+
+#Replacing Age NA with median
+titanic$Age[is.na(titanic$Age)] <- medoftitanic
+
+#Replacing the 2 missing Embark values with mode, "S"
+titanic$Embarked[titanic$Embarked==""] <- "S"
+
+#Removing passenger ID
+titanic <- titanic[-1]
+
+#Cabin has a lot of missing values and thus, is removed, and since the whole ship sank, being in any cabin doesnt matter. You're gonna drop into the sea anyway.
+titanicnew <- subset(titanic, select = c(-Name,-Cabin,-Ticket))
+
+
+#Converting the following columns into factors.
+for (i in c("Survived","Pclass","Sex","Embarked")){
+  titanic[,i]=as.factor(titanic[,i])
+}
+
+
+library(caret)
+#Since the data set is already random, we will split the data into training and test from between
+titanicnew_train <- titanic[1:668,]
+titanicnew_test <- titanic[669:891,]
+
+#Creating the models and finding p-values
+model <- glm(Survived ~ Pclass+Sex+Embarked+SibSp+Parch+Fare,family=binomial(link='logit'),data=titanicnew_train)
+summary(model)
+
+
+#The above model has p values greater 0.05 for Parch, Fare. We eliminate them and consider the remaining to check for new p-values
+model1 <- glm(Survived ~ Pclass+Sex+Embarked+SibSp,family=binomial(link='logit'),data=titanicnew_train)
+summary(model1)
+
+#The previous model has p-val > 0.05 for embarkedQ which is against our rules. Thus we will eliminate it and check for new p values
+model2 <- glm(Survived ~ Pclass+Sex+SibSp,family=binomial(link='logit'),data=titanicnew_train)
+summary(model2)
+
+#The previous model looks good! with p val < 0.05. Siblings column has a p-val =0.05. So we'll train the model once with it to check for better results.
+
+model3 <- glm(Survived ~ Pclass+Sex,family=binomial(link='logit'),data=titanicnew_train)
+summary(model3)
+#The above gives u pval < 0.05 but the AIC increases drastically, which is not good for the model. *****We consider MODEL2 as the FINAL model*****
+
+
+#Equation: 2.3269 -0.6398*Pclass2 -1.7268*Pclass3 -2.7296*Sexmale -0.2150*SibSp
+
+#Predicting test data in accordance to new model
+result <- predict(model2, newdata = titanicnew_test, type = 'response')
+
+#get the prediction. We are assuming the if a person has a probability of 50% or greater, we asuume the person has survived
+result <- ifelse(result >= 0.5 , 1, 0)
+
+#getting accuracy with confusion matrix
+confusionMatrix(data=as.factor(result), reference=titanicnew_test$Survived)
+
+#We get an accuracy of 80%
+```
+

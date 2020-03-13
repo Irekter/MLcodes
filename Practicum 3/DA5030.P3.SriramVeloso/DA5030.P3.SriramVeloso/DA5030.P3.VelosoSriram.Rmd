@@ -1,0 +1,152 @@
+---
+title: "Practicum3"
+author: "Josiah Veloso"
+date: "November 20, 2018"
+output: pdf_document
+---
+
+```{r Problem 1, step 1}
+bank<-read.csv("bank.csv", sep = ";") #noticably the separator is a ":" - output variable "y" is expected for prediction
+str(bank)
+```
+
+```{r Problem 1, step 2}
+library(psych)
+pairs.panels(bank[c("age","job","marital","education","default","balance","housing","loan","contact","duration","campaign","previous","poutcome")])
+pairs.panels(bank[c("age","job","marital","education","default","balance","housing","loan")]) #"Bank client data" section
+pairs.panels(bank[c("contact","day","month","duration")]) #"Related with the last contact of the current campaign" section
+pairs.panels(bank[c("campaign","pdays","previous","poutcome")]) #"Other attributes" section
+#it seems that not only are most of these variables binary but they are also barely correlated to each other with the exception of "previous" and "poutcome" logically
+#this is because "poutcome" literally is resultant from the amount of calls in "previous". Of course same goes to "pdays" and "previous" because "previous" derives from "pdays".
+#notably day and month are not correlated because I guess the callers called consistently over the several months
+#if we were to use a ML package that expects normalization "job", "marital" , "education" and especially "balance" would be an issue and may need to be transformed for use
+#out of all of them "age","duration" and to some extent "campaign" and "balance" (if looked really closely) has a fairly good normal shape.
+summary(bank$month) #I noticed there was plenty of more calls during the summer months of may through august timed when people are "about to leave for vacation" to "coming back"
+summary(bank$campaign) #apparently there was one contact that was contacted 50 times compared to the usual 1-2 times, must be either a troublesome or beneficial call!
+table(bank$y, useNA="ifany") #There is actually no NA values, notably they were able to convert ~13 percent of all their calls
+#Because SVM and Neural networks preferably use numerical values also to prevent any kind of unecessary ethical discrimination - categorical values "job", "marital" and "education"
+#will be removed from the prediction features at the "Bank client data" section.
+#I believe "contact" and "day" features are negligable features however "duration" (which can denote interest/interaction from the contact) and maybe "month" might be useful.
+#Although if I were to use "month" I might need to dummy code binary columns denoting each month 11 times!
+#In the "other" section "pdays" and "previous" seem redundant and shows high correlation to "poutcome" alone - so I will be removing those two and leaving "poutcome" and "campaign"
+#Note I must binary/dummy code "poutcome" to take into account success only - as I assume that is what matters most in the campaign.
+pairs.panels(bank[c("y","poutcome")])
+#Logically I would think "poutcome" would be somewhat correlated to "y" however the correlation calculation seems to think otherwise - it must be because of the amount of factors
+#(which literally do not match the factors in "y") are affecting the calculation.
+```
+
+Overall I would pick features such as age, default, balance, housing, loan, month (which would need binary dummy coding - for specifically summer months), duration, campaign and poutcome (also needing binary dummy coding towards successes) to use for Machine Learning for SVMs not only to minimize for simplicity but to get rid of potential redundancy and unneeded potential discrimination. Also hopefully for sensible logical reasons as explained above. 
+
+```{r Problem 1, step 3 part 1}
+library(kernlab)
+normalize<-function(x){
+  return((x-min(x))/(max(x)-min(x)))
+} #min max normalization prepared
+#dummy code for summer months
+bank$Summ<-ifelse(as.character(as.vector(bank$month))=="may" , 1, 
+                  ifelse(as.character(as.vector(bank$month))=="jun", 1, 
+                         ifelse(as.character(as.vector(bank$month))=="jul", 1, 
+                                ifelse(as.character(as.vector(bank$month))=="aug", 1, 0))))
+#Conversion of selected categorical values "month" and "poutcome"
+summary(bank$month)
+summary(bank$Summ) #Confirms most of the calls were made at summer so my assumption has a degree of reasonable logic to it.
+#dummy coding for poutcome taking into account confirmed successes
+bank$pSuccess<-ifelse(as.character(as.vector(bank$poutcome))=="success",1,0)
+summary(bank$pSuccess) #notably they only converted around ~3% previously (taken from the Mean) 
+#- this actually matches up almost to the current data confirming some viability to my assumption of using this feature.
+#Conversion of binary categorical values into binary numericals
+bank$defaultB<-ifelse(as.character(as.vector(bank$default))=="yes",1,0) #binary coding default
+bank$housingB<-ifelse(as.character(as.vector(bank$housing))=="yes",1,0) #binary coding housing
+bank$loanB<-ifelse(as.character(as.vector(bank$loan))=="yes",1,0) #binary coding loan
+bank$By<-ifelse(as.character(as.vector(bank$y))=="yes",1,0) #binary coding y
+bank_prep<-as.data.frame(bank[,c(1,20,6,21,22,18,12,13,19,17)])#pre normalization version of new bank dataframe of features to be used
+#using features age+defaultB+balance+housingB+loanB+Summ+duration+campaign+pSuccess and y from original modified bank dataframe with dummy/binary codes
+bank_norm<-as.data.frame(lapply(bank_prep[,1:9],normalize))#applying normalization and storing to new data frame
+bank_norm$y<-bank_prep[,10]
+subs_train<-bank_norm[1:3617,] #train ~80 percent of data
+subs_test<-bank_norm[3618:4521,] #test ~20 percent of data
+```
+
+```{r Problem 1, step 3 part 2}
+
+subs_classifier<-ksvm(y~age+defaultB+balance+housingB+loanB+Summ+duration+campaign+pSuccess, data=subs_train, kernel="vanilladot") 
+#I assumed sensibly factors/features I picked from the last question could affect the conversion aka "y".
+#I also confirmed by adding the other variables if they even affected accuracy by adding them in and it turns out as I expected it did not do anything positive at all.
+#This package of svm apparently normalizes and scales the values automatically for use but I will have normalized and scaled anyways - leaving only "y"
+subs_classifier 
+#svm function derived from package using all features to determine "y" note this kernel separator is linear aka vanilla by default.
+#subs_classifier #apparently the training error is ~.10.5 percent
+```
+
+```{r Problem 1, step 3 part 3}
+sub_predictions<-predict(subs_classifier,subs_test)#predict using svm
+table(sub_predictions,subs_test$y) 
+Accuracy<-sub_predictions==subs_test$y #bool to compare accuracy of classifications
+table(Accuracy)
+prop.table(table(Accuracy)) # approximately really similiar error rate of ~11.2% of predicted ~10.5% error in training data
+#apparently has an accuracy of 88 percent - note the algorithim seems to be geared towards less false positives at the cost of more false negatives.
+```
+The data shows they will have converted 3%~ (28/876) of the contacts previously however the algorithim predicts up to 2.4%~ (19/784) correctly. The best fit line(s) splitting optimal linear solutions in SVM must have struggled alot with keeping the "no's" inside due to the large amount of false positives (actual no's vs predicted yes's). Maybe using another kernel would be more optimal in splitting less rigidly.
+
+```{r Problem 1, step 4 part 1}
+bank_prep2<-as.data.frame(bank[,c(1,20,6,21,22,18,12,13,19,23)])#pre normalization version of new bank dataframe of features to be used NOTE column 23 used as binary works for NN
+#using features age+defaultB+balance+housingB+loanB+Summ+duration+campaign+pSuccess and y from original modified bank dataframe with dummy/binary codes
+bank_norm2<-as.data.frame(lapply(bank_prep2,normalize))#applying normalization and storing to new data frame
+subsN_train<-bank_norm2[1:3617,] #train ~80 percent of data
+subsN_test<-bank_norm2[3618:4521,] #test ~20 percent of data
+```
+
+```{r Problem 1, step 4 part 2}
+#installed neuralnet package
+library(neuralnet)
+set.seed(100)
+subs_model<-neuralnet(By~age+defaultB+balance+housingB+loanB+Summ+duration+campaign+pSuccess, data=subsN_train) #note binary y aka By
+#initial test with neural net model made with a default single neuron with the several features to take into account "y"
+plot(subs_model)
+
+model_results<-compute(subs_model,subsN_test[1:9]) #tests using features involved
+predicted_strength<-model_results$net.result #probability collection of subs_model
+cor(predicted_strength,subsN_test$By) #checking correlation - - of ~.534 which is shows these values are still fairly correlated to the ACTUAL data
+```
+
+```{r Problem 1, step 4 part 3}
+set.seed(100)
+subs_model2<-neuralnet(By~age+defaultB+balance+housingB+loanB+Summ+duration+campaign+pSuccess, data=subsN_train, hidden=3) #note binary y aka By
+#2nd test with neural net model made with 3 hidden perceptrons with the several features to take into account "y" - loads ~1:30 in my computer
+plot(subs_model2)
+
+model_results2<-compute(subs_model2,subsN_test[1:9]) #tests using features involved
+predicted_strength2<-model_results2$net.result #probability collection of subs_model2
+cor(predicted_strength2,subsN_test$By) #checking correlation - of ~.530 which is shows these values are still fairly correlated to the ACTUAL data
+#HOWEVER the prediction actually correlation somehow SLIGHTLY got worse, maybe not enough neurons to get a better model - I confirm with accuracy next
+```
+
+```{r Problem 1, step 4 part 4}
+pred1<-ifelse(predicted_strength>=.5,1,0) #converting .5 probability thresholds into assumed predictions
+pred2<-ifelse(predicted_strength2>=.5,1,0)
+table(pred1,as.factor(subsN_test$By)) 
+table(pred2,as.factor(subsN_test$By)) #the 3 hidden perceptron version noticably got less false positives at the slight cost of more false negatives and less true positives
+AccuracyNN1<-as.data.frame(pred1)==subsN_test$By #bool to compare accuracy of single neuron prediction
+table(AccuracyNN1) #~10.3 error rate!
+AccuracyNN2<-as.data.frame(pred2)==subsN_test$By #bool to compare accuracy of 3 hidden neuron prediction
+table(AccuracyNN2) #~10.3% error rate as well! 
+#Literally the same amount of mistakes and accuracy albeit the 3 hidden perceptron version is more prone to false negatives and geared against false positives
+#in this situation if the bank wants to have a slightly wider call net to get every new client and is fine with false positives 
+#- the bank should go with defaultly the no hidden perceptron version of pred1
+```
+
+```{r Problem 1, step 5}
+library(pROC)
+#subs_test$By<-ifelse(as.character(as.vector(subs_test$y))=="yes",1,0)
+subs_predictionsB<-ifelse(as.character(as.vector(sub_predictions))=="yes",1,0) #binary coding for AUC usage
+roc_svm <- roc(subs_test$y,subs_predictionsB)
+auc(roc_svm)
+roc_NN<-roc(subsN_test$By,as.numeric(pred1)) #choosing pred1 for preferred likelihood of more true positives - also there was an error message so I added as.numeric
+auc(roc_NN) #neural network is apparently superior fitting ~67% AUC compared to the rigid svm using a linear kernel of ~58% AUC
+#SVM accuracy: 88.8% (803/904)
+#Neural Network accuracy: 89.6% (810/904)
+#Regardless of the fact the SVM's linear kernel method was probably very rigid - the accuracy is very similiar but apparently 
+#the NN model has slightly better accuracy and a better fitting model as represented by the AUC.
+#From my observations - the more rigid the predictions are - the more false negatives there would be, so it pays to have a model that is not highly constrained.
+#Whether that be in the form of more perceptrons in NN or using a very rigid kernel for your SVM algorithim - at least from the packages and seeds applied.
+```

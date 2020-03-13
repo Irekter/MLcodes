@@ -1,0 +1,178 @@
+---
+title: "DA5030.P2.Karwarkar"
+Author: "Aneesh Karwarkar"
+output: html_notebook
+---
+
+#Problem 2 (25 Points)
+#After reading the case study background information, using the UFFI data set, answer these questions:
+#(5 pts) Are there outliers in the data set? How do you identify outliers and how do you deal with them? Remove them but create a second data set with outliers removed. Keep the original data set.
+```{r}
+library(xlsx)
+uffi <- read.xlsx("uffidata.xlsx",sheetName= "Sales Data")
+
+#We use the read.xlsx function to read the dataset and specify the sheet name
+```
+
+```{r}
+new <- uffi[!uffi %in% boxplot.stats(uffi)$out]
+
+#In this step we find if we have any outliers in our dataset
+#We use the boxplot.stats function to ifnd the outliers and create a new dataset
+```
+
+```{r}
+identical(uffi,new)
+
+#Here we use the function identical to find if the original uffi and new dataset are same or not
+#Hence, we find if the datasets are same then we do not have outliers 
+```
+
+```{r}
+#Here we first load the uffi dataset and check for outliers
+#After creating a new dataset with removed outliers, we check if the two tables are identical
+#The TRUE identical result shows that both the tables are same and the dataset did not have outliers
+
+#Here we use boxplot.stats to identify and remove outliers
+#There are several other functions as well to remove outliers
+#boxplot and quartile ranges are also a method to find the outliers
+```
+
+#(2 pts) What are the correlations to the response variable and are there colinearities? Build a full correlation matrix.
+```{r}
+
+library(corrplot)
+source("http://www.sthda.com/upload/rquery_cormat.r")
+rquery.cormat(uffi, type="full")
+
+#Here we use the function rquery.cormat to create a full correlation matrix
+#We first provide the source for the correlation plot
+#This function provides us with two plots
+#The first plot is a correlation matrix where we find out the correlation coefficients between all the variables
+#The second plot shows us a diagram with the varying size of the dot and colorshowing us the correlatio between the variables
+```
+
+#(10 pts) What is the ideal multiple regression model for predicting home prices in this data set using the data set with outliers removed? Provide a detailed analysis of the model, including Adjusted R-Squared, RMSE, and p-values of principal components. Use backward elimination by p-value to build the model.
+```{r}
+zz <- step(lm(Sale.Price ~ Observation + Year.Sold + UFFI.IN+Brick.Ext+X45.Yrs.+Bsmnt.Fin_SF+Lot.Area+Enc.Pk.Spaces+Living.Area_SF+Central.Air+Pool,data=uffi),direction="backward")
+
+#Here we have performed stepwise backward elimination
+#The function step is used for stepwise backward elimination
+#The lm function is used to build a linear regression model on which we perform stepwise backward elimination
+#Here we are trying to predict the home prices, hence the decision variable is the sale price
+#Then we add all other variables to eliminate using backward direction
+```
+
+```{r}
+library(broom)
+glance(zz)
+
+#The glance function helps us to find the details of the linear model such as R-squared and p-values
+#Here we find the detailed analysis of the model as asked in the question
+#We find the R-squared, adjusted R-squared, p-value and other such analytical values of the model.
+```
+
+```{r}
+sqrt(mean(zz$residuals^2))
+
+#RMSE
+#We use this formula to find the RMSE of the regression model
+```
+
+#(3 pts) On average, by how much do we expect UFFI to change the value of a property?
+```{r}
+cor.test(uffi$Sale.Price, uffi$UFFI.IN)
+
+#Here we find the correlation between UFFI and the Sale proce
+#After the correlation test, we can say that the UFFI on an average reduces the sale price by -0.132
+```
+
+#(5 pts) If the home in question is older than 45 years old, doesn't have a finished basement, has a lot area of 4000 square feet, has a brick exterior, 1 enclosed parking space, 1480 square feet of living space, central air, and no pool, what is its predicted value and what are the 95% confidence intervals of this home with UFFI and without UFFI?
+```{r}
+sample <- data.frame(uffi$X45.Yrs.,uffi$Bsmnt.Fin_SF,uffi$Lot.Area,uffi$Brick.Ext,uffi$Enc.Pk.Spaces,uffi$Living.Area_SF,uffi$Central.Air,uffi$Pool)
+
+#Here we first create a data frame of the factors provided to us in the question
+
+yy <- lm(Sale.Price ~ uffi$X45.Yrs.+ uffi$Bsmnt.Fin_SF+uffi$Lot.Area+uffi$Brick.Ext+uffi$Enc.Pk.Spaces+uffi$Living.Area_SF+uffi$Central.Air,uffi$Pool,data=uffi )
+
+#Here we create a linear regression model using the lm function
+```
+
+```{r}
+(newdata = data.frame(X45.Yrs. = 45, Bsmnt.Fin_SF = 0,Lot.Area = 4000,Brick.Ext=1,Enc.Pk.Spaces=1,Living.Area_SF=1480,Central.Air=1,Pool=0))
+
+#These are the conditions provided to us
+#We create a data frame of the values provided to us
+```
+
+```{r}
+pred <- predict(yy,newdata,interval="predict")
+head(pred,1)
+
+#We create a new dataset
+#We use the predict function to predict the price of the given conditions
+#The value of the house with the given conditions will be 76900
+```
+
+```{r}
+aa <- predict(yy, newdata = newdata, interval = "confidence",level= 0.95)
+head(aa,1)
+
+#Here we provide the confidence intervale of 0.95 to find the 95% confidence interval
+```
+
+#Problem 4 (10 Points)
+#(10 pts) Elaborate on the use of kNN and Naive Bayes for data imputation. Explain in reasonable detail how you would use these algorithms to impute missing data and why it can work.
+```{r}
+#Introduction
+#Several times during Data analysis we come across various datasets with missing values.
+#These missing values hamper with the analysis and give us false results.
+#The missing data could not random or not random and we use methods such as kNN and Naive Bayes for data imputation.
+
+#kNN
+#KNN is an algorithm that is useful for matching a point with its closest k neighborS.
+#kNN can be used for data that are continuous, discrete, ordinal and categorical which makes it particularly useful for dealing with various kinds of missing data.
+#In kNN the logic we use to impute missing data is that the missing points are near the data points around it.
+#Thus the kNN algorithm works because of its use on any king of data and multiple missing data values as well.
+#The knn.impute function is used to impute missing data using kNN algorithms
+```
+
+```{r}
+#kNN imputation example
+
+require(DMwR)
+x  = matrix(rnorm(50), 50, 50)
+x.missing= x >1
+x[x.missing] = NA
+complete.cases(x)
+kNN_impute <- knnImputation(x, 2)
+
+#We first create a dummy matrix
+#We use the complete.cases function to return the logical vectors indicating which vectors are complete
+#Then we perform kNN imputation to find the missing data and create a new dataset which is complete
+```
+
+```{r}
+#Naive Bayes
+#Naive Bayes is popular for its simple form and high accuracy.
+#The Naive Bayesian classifier take place in two phases.
+#In the first phase, the order of missing values treatment is decided according measurements such as missing rate and weighted index.
+#In the second phase, the algorithm carries out an iterative and repetitive process.The first attributes are first treated for missing values and then the process keeps repeating for all other attributes.
+```
+
+```{r}
+#Naive Bayes imputation example
+
+library(naivebayes)
+data(iris)
+nb <- naive_bayes(Species ~ ., data = iris)
+nb <- naive_bayes(iris[,-5], iris[,5])
+nb
+table(predict(nb, iris[,-5]), iris[,5])
+
+#Here we use the in-built iris dataset in R
+#We create a new datset for species
+#We perform Naive Bayes imputation using the naive_bayes function
+#We create a table and use the predict function to create a table of the species prediction
+```
+

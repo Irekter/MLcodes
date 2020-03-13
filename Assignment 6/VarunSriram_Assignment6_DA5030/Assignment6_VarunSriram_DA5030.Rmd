@@ -1,0 +1,197 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+name: varun Sriram Da 5030 Assignment 6
+---
+
+```{r, Question 1}
+#QUESTION 1
+student <- read.csv("StudentPMath.csv")
+
+#str(student)
+head(student)
+
+
+#install.packages(psych)
+library("psych")
+pairs.panels(student[c("age","absences","G1","G2","G3")])
+
+
+student$activities<-ifelse(student$activities == "yes", 1, 0)
+
+head(student)
+
+mstudent <- lm(G3 ~ G1+G2+studytime+activities+health+nursery+Walc+Dalc+goout, data = student)
+mstudent
+
+summary(mstudent)
+
+
+
+
+
+step(lm(G3 ~ G1+G2+studytime+activities+health+nursery+Walc+Dalc+goout, data = student), direction = "backward")
+
+#From the above backward method, we use G1, G2, activites and Walc
+new_m <- lm(G3 ~ G1+G2+activities+Walc, data = student)
+new_m
+
+#Equation
+#G3 <- -2.020 + 0.163*G1 + 0.984*G2 + 0.1085*studytime + -0.277*activities
+
+s_new_m <- summary(new_m)
+
+
+#forcasting next G3 with arbitrary values
+#chosen attributes = g1, g2 because they're scores, very important. Walc because alcohol will help you relax and activites since extra curricular activities are important to children.
+G3_value <- s_new_m$coefficients[[1]] + s_new_m$coefficients[[2]]*10 + s_new_m$coefficients[[3]]*12 + s_new_m$coefficients[[4]]*1 + s_new_m$coefficients[[5]]* 3
+
+G3_value
+
+#Now range with confidence level
+
+G3_value - 1.96*1.932
+
+G3_value + 1.96*1.932
+
+# confidence interval for a prediction range => 7.69 - 15.26
+
+g3ss <- predict(new_m, student[c(31,32,19,28)])
+head(g3ss)
+
+#mean sq error
+sqerr <- (student[33] - g3ss)^2
+sqerr
+msqerr <- mean(sqerr$G3)
+rmse <- sqrt(msqerr)
+rmse
+```
+
+```{r, Question 2}
+
+#QUESTION 2
+
+student$PF <- 0
+for(i in 1:nrow(student))
+{
+  ifelse(student$G3[i]>=10, student$PF[i]<-'P', student$PF[i]<-'F')
+}
+str(student)
+
+student$PF<-ifelse(student$PF == "P", 1, 0)
+
+#get p values for all columns and choose the minimum 4
+lmstudent <- lm(PF ~., data=student)
+summary(lmstudent)
+
+#creating graph lm
+glmstudent <- glm(PF ~ G3+G2+G1+goout, data = student)
+summary(glmstudent)
+
+#regression equation : 1/(1+e^( -0.138159 + 0.063283*G3 + 0.008842*G2 + 0.014122*G1 - 0.031799*goout))
+
+#get the prediction. We are assuming the if a student has a probability of 50% or greater, we asuume the student has passed. 
+glmpred <- predict(glmstudent, student, type = "response")
+head(glmpred)
+glmx <- ifelse(glmpred >= 0.5, 1,0)
+glmx
+
+#get accuracy
+meanp <- mean(ifelse(glmx == student[34], 1,0))
+
+#accuracy = 0.93
+```
+
+```{r, Question 3}
+#QUESITON 3
+
+
+#reading the data
+wine <- read.csv("whitewines.csv")
+
+#exploring the data
+str(wine)
+
+#creating a histogram to compare the distribution of the wines. 
+hist(wine$quality)
+#The final histogram is a bell shaped curve with the peak/mode at around six.
+
+#Splitting the data into test and training sets.
+wine_train <- wine[1:3750,]
+wine_test <- wine[3751:4898,]
+
+#rpart library offers best implementation of regression tree modelling
+library(rpart)
+
+#using rpart on quality as the output and using all other columns as predictors in the training data set
+m.rpart <- rpart(quality ~., data = wine_train)
+
+m.rpart
+
+library(rpart.plot)
+
+MAE <- function(actual, predicted)
+{
+  mean(abs(actual-predicted))
+}
+
+
+RMSE <- function(actual, predicted)
+{
+  sqrt(mean((actual-predicted)^2))
+}
+
+#produce a tree diagram for the rpart function output m.rpart.
+rpart.plot(m.rpart, digits = 3)
+
+#The fallen.leavesparameter forces the leaf nodes to be aligned at the bottom of the plot, while the type and extra parameters affect the way the decisions and nodes are labeled
+rpart.plot(m.rpart, digits=4,fallen.leaves = TRUE, type = 3, extra = 101)
+
+
+#using the regression tree model  used, we predict the test cases and store it in vector.
+r.rpart <- predict(m.rpart, wine_test)
+
+rmse_rpart <- RMSE(wine_test,r.rpart)
+rmse_rpart
+#The correlation between the predicted and actual quality values will display the model's performance
+cor(r.rpart, wine_test$quality)
+#An acceptable value, but it doesnt calculate 
+
+
+
+
+#The difference between our model's predictions and the true quality score was about 0.59
+MAE(r.rpart, wine_test$quality)
+
+#Gettng mean quality rating
+mean(wine_train$quality)
+
+
+MAE(5.87, wine_test$quality)
+#Our regression tree (MAE = 0.59) comes closer on average to the true quality score than the imputed mean (MAE = 0.67), but not by much. In comparison. This suggests that there is room for improvement
+
+library(RWeka)
+
+#We add a pruning mechanism for our tree
+m.m5p <- M5P(quality~.,data=wine_train)
+
+m.m5p
+
+#predicting on unseen test data
+p.m5p <- predict(m.m5p, wine_test)
+
+rmse_m5p <- RMSE(wine_test,p.m5p)
+
+#final rmse
+rmse_m5p               
+summary(p.m5p)
+
+#Correaltion is higher than the previous computation
+cor(p.m5p, wine_test$quality)
+
+#the model has slightly reduced the mean absolute error
+MAE(wine_test$quality, p.m5p)
+
+```

@@ -1,0 +1,1210 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={R Notebook},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{R Notebook}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{}
+    \preauthor{}\postauthor{}
+    \date{}
+    \predate{}\postdate{}
+  
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#PROBLEM 1}
+\CommentTok{#question 1}
+
+\CommentTok{#Reading the .csv file}
+\NormalTok{glass <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"glass.csv"}\NormalTok{,}\DataTypeTok{sep =} \StringTok{","}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{)}
+
+\CommentTok{#Adding column names}
+\KeywordTok{colnames}\NormalTok{(glass)<-}\KeywordTok{c}\NormalTok{(}\StringTok{"ID"}\NormalTok{, }\StringTok{"RefractiveIndex"}\NormalTok{, }\StringTok{"Sodium"}\NormalTok{, }\StringTok{"Magnesium"}\NormalTok{, }\StringTok{"Aluminium"}\NormalTok{, }\StringTok{"Silicon"}\NormalTok{, }\StringTok{"Potassium"}\NormalTok{, }\StringTok{"Calcium"}\NormalTok{, }\StringTok{"Barium"}\NormalTok{, }\StringTok{"Iron"}\NormalTok{, }\StringTok{"Type"}\NormalTok{)}
+
+
+\KeywordTok{head}\NormalTok{(glass)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   ID RefractiveIndex Sodium Magnesium Aluminium Silicon Potassium Calcium
+## 1  2         1.51761  13.89      3.60      1.36   72.73      0.48    7.83
+## 2  3         1.51618  13.53      3.55      1.54   72.99      0.39    7.78
+## 3  4         1.51766  13.21      3.69      1.29   72.61      0.57    8.22
+## 4  5         1.51742  13.27      3.62      1.24   73.08      0.55    8.07
+## 5  6         1.51596  12.79      3.61      1.62   72.97      0.64    8.07
+## 6  7         1.51743  13.30      3.60      1.14   73.09      0.58    8.17
+##   Barium Iron Type
+## 1      0 0.00    1
+## 2      0 0.00    1
+## 3      0 0.00    1
+## 4      0 0.00    1
+## 5      0 0.26    1
+## 6      0 0.00    1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 2}
+\CommentTok{#Getting information of the glass}
+\KeywordTok{summary}\NormalTok{(glass)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##        ID      RefractiveIndex     Sodium        Magnesium    
+##  Min.   :  2   Min.   :1.511   Min.   :10.73   Min.   :0.000  
+##  1st Qu.: 55   1st Qu.:1.517   1st Qu.:12.90   1st Qu.:2.090  
+##  Median :108   Median :1.518   Median :13.30   Median :3.480  
+##  Mean   :108   Mean   :1.518   Mean   :13.41   Mean   :2.676  
+##  3rd Qu.:161   3rd Qu.:1.519   3rd Qu.:13.83   3rd Qu.:3.600  
+##  Max.   :214   Max.   :1.534   Max.   :17.38   Max.   :3.980  
+##    Aluminium        Silicon        Potassium         Calcium      
+##  Min.   :0.290   Min.   :69.81   Min.   :0.0000   Min.   : 5.430  
+##  1st Qu.:1.190   1st Qu.:72.28   1st Qu.:0.1300   1st Qu.: 8.240  
+##  Median :1.360   Median :72.79   Median :0.5600   Median : 8.600  
+##  Mean   :1.447   Mean   :72.66   Mean   :0.4991   Mean   : 8.958  
+##  3rd Qu.:1.630   3rd Qu.:73.09   3rd Qu.:0.6100   3rd Qu.: 9.180  
+##  Max.   :3.500   Max.   :75.41   Max.   :6.2100   Max.   :16.190  
+##      Barium            Iron              Type      
+##  Min.   :0.0000   Min.   :0.00000   Min.   :1.000  
+##  1st Qu.:0.0000   1st Qu.:0.00000   1st Qu.:1.000  
+##  Median :0.0000   Median :0.00000   Median :2.000  
+##  Mean   :0.1759   Mean   :0.05728   Mean   :2.789  
+##  3rd Qu.:0.0000   3rd Qu.:0.10000   3rd Qu.:3.000  
+##  Max.   :3.1500   Max.   :0.51000   Max.   :7.000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 3}
+\CommentTok{#Creating the histogram sodium with normal curve as suggested in the tutorial provided in the question.}
+\NormalTok{x <-}\StringTok{ }\NormalTok{glass}\OperatorTok{$}\NormalTok{Sodium}
+\NormalTok{h<-}\KeywordTok{hist}\NormalTok{(x, }\DataTypeTok{breaks=}\DecValTok{10}\NormalTok{, }\DataTypeTok{col=}\StringTok{"red"}\NormalTok{, }\DataTypeTok{xlab=}\StringTok{"Sodium stuff"}\NormalTok{,}
+   \DataTypeTok{main=}\StringTok{"Histogram with Normal Curve"}\NormalTok{)}
+\NormalTok{xfit<-}\KeywordTok{seq}\NormalTok{(}\KeywordTok{min}\NormalTok{(x),}\KeywordTok{max}\NormalTok{(x),}\DataTypeTok{length=}\DecValTok{40}\NormalTok{)}
+\NormalTok{yfit<-}\KeywordTok{dnorm}\NormalTok{(xfit,}\DataTypeTok{mean=}\KeywordTok{mean}\NormalTok{(x),}\DataTypeTok{sd=}\KeywordTok{sd}\NormalTok{(x))}
+\NormalTok{yfit <-}\StringTok{ }\NormalTok{yfit}\OperatorTok{*}\KeywordTok{diff}\NormalTok{(h}\OperatorTok{$}\NormalTok{mids[}\DecValTok{1}\OperatorTok{:}\DecValTok{2}\NormalTok{])}\OperatorTok{*}\KeywordTok{length}\NormalTok{(x)}
+\KeywordTok{lines}\NormalTok{(xfit, yfit, }\DataTypeTok{col=}\StringTok{"blue"}\NormalTok{, }\DataTypeTok{lwd=}\DecValTok{2}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Practicum1_VarunSriram_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 4}
+\CommentTok{#Removing ID columns, since it's redundant}
+\NormalTok{glass <-}\StringTok{ }\NormalTok{glass[}\OperatorTok{-}\DecValTok{1}\NormalTok{]}
+
+\CommentTok{#creating a function to normalize using min max method}
+\NormalTok{normalize <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(x)}
+\NormalTok{\{}
+  \KeywordTok{return}\NormalTok{((x}\OperatorTok{-}\KeywordTok{min}\NormalTok{(x))}\OperatorTok{/}\NormalTok{(}\KeywordTok{max}\NormalTok{(x)}\OperatorTok{-}\KeywordTok{min}\NormalTok{(x)))}
+\NormalTok{\}}
+
+\CommentTok{#Using min max method to normalize the data for refractive index and sodium}
+\NormalTok{glass[}\DecValTok{1}\OperatorTok{:}\DecValTok{2}\NormalTok{] <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{lapply}\NormalTok{(glass[}\DecValTok{1}\OperatorTok{:}\DecValTok{2}\NormalTok{], normalize))}
+
+\KeywordTok{head}\NormalTok{(glass)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   RefractiveIndex    Sodium Magnesium Aluminium Silicon Potassium Calcium
+## 1       0.2835821 0.4751880      3.60      1.36   72.73      0.48    7.83
+## 2       0.2208077 0.4210526      3.55      1.54   72.99      0.39    7.78
+## 3       0.2857770 0.3729323      3.69      1.29   72.61      0.57    8.22
+## 4       0.2752414 0.3819549      3.62      1.24   73.08      0.55    8.07
+## 5       0.2111501 0.3097744      3.61      1.62   72.97      0.64    8.07
+## 6       0.2756804 0.3864662      3.60      1.14   73.09      0.58    8.17
+##   Barium Iron Type
+## 1      0 0.00    1
+## 2      0 0.00    1
+## 3      0 0.00    1
+## 4      0 0.00    1
+## 5      0 0.26    1
+## 6      0 0.00    1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 5}
+\CommentTok{#Taken from R documentation https://www.rdocumentation.org/packages/base/versions/3.5.1/topics/scale }
+\CommentTok{#scaling with center = true and scale = true  calculates the z-factor. If scale is TRUE then scaling is done by dividing the (centered) columns of x by their standard deviations if center is TRUE, and the root mean square }
+\NormalTok{glass[}\DecValTok{3}\OperatorTok{:}\DecValTok{8}\NormalTok{] <-}\StringTok{ }\KeywordTok{scale}\NormalTok{(glass[}\DecValTok{3}\OperatorTok{:}\DecValTok{8}\NormalTok{], }\DataTypeTok{center =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{scale =} \OtherTok{TRUE}\NormalTok{)}
+\KeywordTok{head}\NormalTok{(glass)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   RefractiveIndex    Sodium Magnesium  Aluminium     Silicon   Potassium
+## 1       0.2835821 0.4751880 0.6414256 -0.1730924  0.09686241 -0.02926025
+## 2       0.2208077 0.4210526 0.6067143  0.1869924  0.43275722 -0.16707818
+## 3       0.2857770 0.3729323 0.7039059 -0.3131254 -0.05816597  0.10855768
+## 4       0.2752414 0.3819549 0.6553101 -0.4131490  0.54902851  0.07793148
+## 5       0.2111501 0.3097744 0.6483678  0.3470301  0.40691916  0.21574941
+## 6       0.2756804 0.3864662 0.6414256 -0.6131961  0.56194754  0.12387079
+##      Calcium     Barium Iron Type
+## 1 -0.7907366 -0.3529761 0.00    1
+## 2 -0.8257890 -0.3529761 0.00    1
+## 3 -0.5173277 -0.3529761 0.00    1
+## 4 -0.6224850 -0.3529761 0.00    1
+## 5 -0.6224850 -0.3529761 0.26    1
+## 6 -0.5523801 -0.3529761 0.00    1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 6}
+\CommentTok{#TypeName <- factor(glass$Type, levels = c("1", "2","3","4","5","6", "7"), labels = c("BWFP", "BWNFP", "VWFP", "VWNFP", "C", "T", "HL"))}
+
+\CommentTok{#Getting percentage of each glass type from the data set}
+\KeywordTok{round}\NormalTok{(}\KeywordTok{prop.table}\NormalTok{(}\KeywordTok{table}\NormalTok{(glass}\OperatorTok{$}\NormalTok{Type)) }\OperatorTok{*}\StringTok{ }\DecValTok{100}\NormalTok{, }\DataTypeTok{digits=}\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##    1    2    3    5    6    7 
+## 32.4 35.7  8.0  6.1  4.2 13.6
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#nrow(glass)}
+
+\KeywordTok{library}\NormalTok{(caret)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: lattice
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: ggplot2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(lattice)}
+\CommentTok{#library(ggplot)}
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{99}\NormalTok{)}
+
+\CommentTok{#getting indices for data partitioning }
+\NormalTok{index <-}\StringTok{ }\KeywordTok{createDataPartition}\NormalTok{(}\DataTypeTok{y=}\NormalTok{glass}\OperatorTok{$}\NormalTok{Type, }\DataTypeTok{p=}\FloatTok{0.5}\NormalTok{,}\DataTypeTok{list=}\OtherTok{FALSE}\NormalTok{)}
+
+\CommentTok{#create training set using index}
+\NormalTok{glass_training <-}\StringTok{ }\NormalTok{glass[index,]}
+
+\CommentTok{#create test data set using -index = other rows excluding index rows}
+\NormalTok{glass_test <-}\StringTok{ }\NormalTok{glass[}\OperatorTok{-}\NormalTok{index,]}
+
+
+
+
+
+
+
+
+
+
+
+\CommentTok{#question 7}
+\CommentTok{#Function to calculate distance between neighbors}
+\NormalTok{d <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(p,q)}
+\NormalTok{\{}
+\NormalTok{  x<-}\DecValTok{0}
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\KeywordTok{length}\NormalTok{(p))}
+\NormalTok{  \{}
+\NormalTok{    x <-}\StringTok{ }\NormalTok{x}\OperatorTok{+}\NormalTok{(p[i]}\OperatorTok{+}\NormalTok{q[i])}\OperatorTok{^}\DecValTok{2}
+\NormalTok{  \}}
+\NormalTok{  d <-}\StringTok{ }\KeywordTok{sqrt}\NormalTok{(x)}
+\NormalTok{\}}
+
+
+\CommentTok{#Function to calculate neighbors}
+\NormalTok{neighbors <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(train, u)}
+\NormalTok{\{}
+\NormalTok{  m <-}\StringTok{ }\KeywordTok{nrow}\NormalTok{(train)}
+\NormalTok{  ds <-}\StringTok{ }\KeywordTok{numeric}\NormalTok{(m)}
+\NormalTok{  q <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(u[}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{9}\NormalTok{)])}
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{m)}
+\NormalTok{  \{}
+\NormalTok{    p <-}\StringTok{ }\NormalTok{train[i,}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{9}\NormalTok{)]}
+\NormalTok{    ds[i] <-}\StringTok{ }\KeywordTok{d}\NormalTok{(p,q)}
+\NormalTok{  \}}
+\NormalTok{  neighbors <-}\StringTok{ }\NormalTok{ds}
+\NormalTok{\}}
+
+
+\CommentTok{#Function to calculate nearest neighbors}
+\NormalTok{k.closest <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(neigh, k)}
+\NormalTok{\{}
+\NormalTok{  ordered.neigh <-}\StringTok{ }\KeywordTok{order}\NormalTok{(}\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{lapply}\NormalTok{(neigh, unlist)))}
+\NormalTok{  k.closest <-}\StringTok{ }\NormalTok{ordered.neigh[}\DecValTok{1}\OperatorTok{:}\NormalTok{k]}
+\NormalTok{\}}
+
+\CommentTok{#Get mode from the nearest neighbors}
+\NormalTok{Mode <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(x)}
+\NormalTok{\{}
+\NormalTok{  ux <-}\StringTok{ }\KeywordTok{unique}\NormalTok{(x)}
+\NormalTok{  ux[}\KeywordTok{which.max}\NormalTok{(}\KeywordTok{tabulate}\NormalTok{(}\KeywordTok{match}\NormalTok{(x,ux)))]}
+\NormalTok{\}}
+
+
+\CommentTok{#knn function}
+\NormalTok{knn_ <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(train, u, k)}
+\NormalTok{\{}
+\NormalTok{  nb <-}\StringTok{ }\KeywordTok{neighbors}\NormalTok{(train, u)}
+\NormalTok{  f <-}\StringTok{ }\KeywordTok{k.closest}\NormalTok{(nb,k)}
+\NormalTok{  knn_<-}\KeywordTok{Mode}\NormalTok{(train}\OperatorTok{$}\NormalTok{Type[f])}
+\NormalTok{\}}
+
+\CommentTok{#setting k according to question}
+\NormalTok{k <-}\StringTok{ }\DecValTok{10}
+
+\CommentTok{#getting test cases from question}
+\NormalTok{test1 <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\FloatTok{1.51621}\NormalTok{,}\FloatTok{12.53}\NormalTok{,}\FloatTok{3.48}\NormalTok{,}\FloatTok{1.39}\NormalTok{,}\FloatTok{73.39}\NormalTok{,}\FloatTok{0.60}\NormalTok{,}\FloatTok{8.55}\NormalTok{,}\FloatTok{0.00}\NormalTok{,}\FloatTok{0.05}\NormalTok{)}
+\NormalTok{test2 <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\FloatTok{1.5098}\NormalTok{,}\FloatTok{12.77}\NormalTok{,}\FloatTok{1.85}\NormalTok{,}\FloatTok{1.81}\NormalTok{,}\FloatTok{72.69}\NormalTok{,}\FloatTok{0.59}\NormalTok{,}\FloatTok{10.01}\NormalTok{,}\FloatTok{0.00}\NormalTok{,}\FloatTok{0.01}\NormalTok{)}
+
+\CommentTok{#normalizing test cases}
+\NormalTok{norm_test1 <-}\StringTok{ }\KeywordTok{normalize}\NormalTok{(test1)}
+\NormalTok{norm_test2 <-}\StringTok{ }\KeywordTok{normalize}\NormalTok{(test2)}
+
+\CommentTok{#getting knn for test cases}
+\NormalTok{ans_test1<-}\StringTok{ }\KeywordTok{knn_}\NormalTok{(glass,test1,k)}
+\NormalTok{ans_test2<-}\StringTok{ }\KeywordTok{knn_}\NormalTok{(glass,test2,k)}
+
+\NormalTok{ans_test1}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ans_test2}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 8}
+\CommentTok{#Using new k val}
+\NormalTok{newk<-}\DecValTok{14}
+\NormalTok{newans_test1<-}\StringTok{ }\KeywordTok{knn_}\NormalTok{(glass,test1,newk)}
+\NormalTok{newans_test2<-}\StringTok{ }\KeywordTok{knn_}\NormalTok{(glass,test2,newk)}
+
+\NormalTok{newans_test1}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{newans_test2}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 9}
+\CommentTok{#Performing knn using caret function}
+\KeywordTok{library}\NormalTok{(class)}
+\KeywordTok{library}\NormalTok{(gmodels)}
+\NormalTok{label_training <-}\StringTok{ }\NormalTok{glass_training[,}\DecValTok{10}\NormalTok{]}
+\NormalTok{label_test <-}\StringTok{ }\NormalTok{glass_test[,}\DecValTok{10}\NormalTok{]}
+
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{100}\NormalTok{)}
+\NormalTok{glass_test_prediction <-}\StringTok{ }\KeywordTok{knn}\NormalTok{(}\DataTypeTok{train =}\NormalTok{ glass_training, }\DataTypeTok{test=}\NormalTok{ glass_test, }\DataTypeTok{cl=}\NormalTok{label_training, }\DataTypeTok{k=}\DecValTok{14}\NormalTok{)}
+
+\CommentTok{#glass_test_prediction}
+\KeywordTok{CrossTable}\NormalTok{(}\DataTypeTok{x=}\NormalTok{label_test, }\DataTypeTok{y =}\NormalTok{glass_test_prediction, }\DataTypeTok{prop.chisq=}\OtherTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |           N / Row Total |
+## |           N / Col Total |
+## |         N / Table Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  105 
+## 
+##  
+##              | glass_test_prediction 
+##   label_test |         1 |         2 |         3 |         5 |         6 |         7 | Row Total | 
+## -------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+##            1 |        35 |         0 |         0 |         0 |         0 |         0 |        35 | 
+##              |     1.000 |     0.000 |     0.000 |     0.000 |     0.000 |     0.000 |     0.333 | 
+##              |     0.972 |     0.000 |     0.000 |     0.000 |     0.000 |     0.000 |           | 
+##              |     0.333 |     0.000 |     0.000 |     0.000 |     0.000 |     0.000 |           | 
+## -------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+##            2 |         1 |        36 |         0 |         0 |         0 |         0 |        37 | 
+##              |     0.027 |     0.973 |     0.000 |     0.000 |     0.000 |     0.000 |     0.352 | 
+##              |     0.028 |     0.857 |     0.000 |     0.000 |     0.000 |     0.000 |           | 
+##              |     0.010 |     0.343 |     0.000 |     0.000 |     0.000 |     0.000 |           | 
+## -------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+##            3 |         0 |         6 |         2 |         0 |         0 |         0 |         8 | 
+##              |     0.000 |     0.750 |     0.250 |     0.000 |     0.000 |     0.000 |     0.076 | 
+##              |     0.000 |     0.143 |     1.000 |     0.000 |     0.000 |     0.000 |           | 
+##              |     0.000 |     0.057 |     0.019 |     0.000 |     0.000 |     0.000 |           | 
+## -------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+##            5 |         0 |         0 |         0 |         3 |         2 |         0 |         5 | 
+##              |     0.000 |     0.000 |     0.000 |     0.600 |     0.400 |     0.000 |     0.048 | 
+##              |     0.000 |     0.000 |     0.000 |     0.750 |     0.500 |     0.000 |           | 
+##              |     0.000 |     0.000 |     0.000 |     0.029 |     0.019 |     0.000 |           | 
+## -------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+##            6 |         0 |         0 |         0 |         1 |         2 |         1 |         4 | 
+##              |     0.000 |     0.000 |     0.000 |     0.250 |     0.500 |     0.250 |     0.038 | 
+##              |     0.000 |     0.000 |     0.000 |     0.250 |     0.500 |     0.059 |           | 
+##              |     0.000 |     0.000 |     0.000 |     0.010 |     0.019 |     0.010 |           | 
+## -------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+##            7 |         0 |         0 |         0 |         0 |         0 |        16 |        16 | 
+##              |     0.000 |     0.000 |     0.000 |     0.000 |     0.000 |     1.000 |     0.152 | 
+##              |     0.000 |     0.000 |     0.000 |     0.000 |     0.000 |     0.941 |           | 
+##              |     0.000 |     0.000 |     0.000 |     0.000 |     0.000 |     0.152 |           | 
+## -------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+## Column Total |        36 |        42 |         2 |         4 |         4 |        17 |       105 | 
+##              |     0.343 |     0.400 |     0.019 |     0.038 |     0.038 |     0.162 |           | 
+## -------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+## 
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 10}
+
+\CommentTok{#Function to calculate data frame with data frames}
+
+\NormalTok{Bigknnfunc <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(train,test,k)}
+\NormalTok{\{}
+\NormalTok{  m<-}\KeywordTok{nrow}\NormalTok{(test)}
+\NormalTok{  final<-}\KeywordTok{as.numeric}\NormalTok{(m)}
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{m)}
+\NormalTok{  \{}
+\NormalTok{  nb <-}\StringTok{ }\KeywordTok{neighbors}\NormalTok{(train[,}\DecValTok{1}\OperatorTok{:}\DecValTok{9}\NormalTok{], test[i,}\DecValTok{1}\OperatorTok{:}\DecValTok{9}\NormalTok{])}
+\NormalTok{  f <-}\StringTok{ }\KeywordTok{k.closest}\NormalTok{(nb,k)}
+\NormalTok{  final[i]<-}\KeywordTok{Mode}\NormalTok{(train}\OperatorTok{$}\NormalTok{Type[f])}
+\NormalTok{  \}}
+\NormalTok{  Bigknnfunc<-final}
+\NormalTok{\}}
+
+
+
+\CommentTok{#Finding nearest neighbor values for various ks}
+\NormalTok{knntest5 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{5}\NormalTok{)}
+\NormalTok{knntest6 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{6}\NormalTok{)}
+\NormalTok{knntest7 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{7}\NormalTok{)}
+\NormalTok{knntest8 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{8}\NormalTok{)}
+\NormalTok{knntest9 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{9}\NormalTok{)}
+\NormalTok{knntest10 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{10}\NormalTok{)}
+\NormalTok{knntest11 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{11}\NormalTok{)}
+\NormalTok{knntest12 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{12}\NormalTok{)}
+\NormalTok{knntest13 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{13}\NormalTok{)}
+\NormalTok{knntest14 <-}\StringTok{ }\KeywordTok{Bigknnfunc}\NormalTok{(glass_training, glass_test, }\DecValTok{14}\NormalTok{)}
+                   
+
+\CommentTok{#Function to Check if our predictions are in accordance to the reality (Accuracy). COmparing knn tests and labels. If the predictions are true, 1 is returned and 0 for false.    }
+\NormalTok{Resultcomparison <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(prediction, reality)}
+\NormalTok{\{}
+  
+\NormalTok{  pred <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(prediction)}
+\NormalTok{  real <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(reality)}
+  
+\NormalTok{  m<-}\KeywordTok{nrow}\NormalTok{(real)}
+\NormalTok{  storebool <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(m)}
+  
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{m)}
+\NormalTok{  \{}
+\NormalTok{    getbool<-}\KeywordTok{ifelse}\NormalTok{(pred[i,]}\OperatorTok{==}\NormalTok{real[i,],}\OtherTok{TRUE}\NormalTok{,}\OtherTok{FALSE}\NormalTok{)}
+\NormalTok{    storebool[i] <-}\StringTok{ }\NormalTok{getbool}
+\NormalTok{  \}}
+\NormalTok{  Resultcomparison<-storebool}
+\NormalTok{\}}
+
+
+\CommentTok{#comparing results for each value of K for accuracy}
+\NormalTok{compare_result5 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest5,label_test))}
+\NormalTok{compare_result6 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest6,label_test))}
+\NormalTok{compare_result7 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest7,label_test))}
+\NormalTok{compare_result8 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest8,label_test))}
+\NormalTok{compare_result9 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest9,label_test))}
+\NormalTok{compare_result10 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest10,label_test))}
+\NormalTok{compare_result11 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest11,label_test))}
+\NormalTok{compare_result12 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest12,label_test))}
+\NormalTok{compare_result13 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest13,label_test))}
+\NormalTok{compare_result14 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{Resultcomparison}\NormalTok{(knntest14,label_test))}
+\CommentTok{#still learning r, so had to use the long way.}
+
+\CommentTok{#mean in summary shows the accuracy}
+\KeywordTok{summary}\NormalTok{(compare_result5)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest5, label_test)
+##  Min.   :0.0000                        
+##  1st Qu.:0.0000                        
+##  Median :0.0000                        
+##  Mean   :0.1619                        
+##  3rd Qu.:0.0000                        
+##  Max.   :1.0000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(compare_result6)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest6, label_test)
+##  Min.   :0.0000                        
+##  1st Qu.:0.0000                        
+##  Median :0.0000                        
+##  Mean   :0.1619                        
+##  3rd Qu.:0.0000                        
+##  Max.   :1.0000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(compare_result7)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest7, label_test)
+##  Min.   :0.0000                        
+##  1st Qu.:0.0000                        
+##  Median :0.0000                        
+##  Mean   :0.1714                        
+##  3rd Qu.:0.0000                        
+##  Max.   :1.0000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(compare_result8)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest8, label_test)
+##  Min.   :0.000                         
+##  1st Qu.:0.000                         
+##  Median :0.000                         
+##  Mean   :0.181                         
+##  3rd Qu.:0.000                         
+##  Max.   :1.000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(compare_result9)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest9, label_test)
+##  Min.   :0.0000                        
+##  1st Qu.:0.0000                        
+##  Median :0.0000                        
+##  Mean   :0.1429                        
+##  3rd Qu.:0.0000                        
+##  Max.   :1.0000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(compare_result10)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest10, label_test)
+##  Min.   :0.0000                         
+##  1st Qu.:0.0000                         
+##  Median :0.0000                         
+##  Mean   :0.1619                         
+##  3rd Qu.:0.0000                         
+##  Max.   :1.0000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(compare_result11)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest11, label_test)
+##  Min.   :0.0000                         
+##  1st Qu.:0.0000                         
+##  Median :0.0000                         
+##  Mean   :0.1714                         
+##  3rd Qu.:0.0000                         
+##  Max.   :1.0000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(compare_result12)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest12, label_test)
+##  Min.   :0.000                          
+##  1st Qu.:0.000                          
+##  Median :0.000                          
+##  Mean   :0.219                          
+##  3rd Qu.:0.000                          
+##  Max.   :1.000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(compare_result13)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest13, label_test)
+##  Min.   :0.0000                         
+##  1st Qu.:0.0000                         
+##  Median :0.0000                         
+##  Mean   :0.2571                         
+##  3rd Qu.:1.0000                         
+##  Max.   :1.0000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(compare_result14)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Resultcomparison(knntest14, label_test)
+##  Min.   :0.0000                         
+##  1st Qu.:0.0000                         
+##  Median :0.0000                         
+##  Mean   :0.2571                         
+##  3rd Qu.:1.0000                         
+##  Max.   :1.0000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#k=13,14 have the highest accuracy}
+
+\CommentTok{#getting the mean values of all knn for plotting k to accuracy graph}
+\NormalTok{all_mean <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(compare_result5),}\KeywordTok{colMeans}\NormalTok{(compare_result6),}\KeywordTok{colMeans}\NormalTok{(compare_result7),}\KeywordTok{colMeans}\NormalTok{(compare_result8),}\KeywordTok{colMeans}\NormalTok{(compare_result9),}\KeywordTok{colMeans}\NormalTok{(compare_result10),}\KeywordTok{colMeans}\NormalTok{(compare_result11),}\KeywordTok{colMeans}\NormalTok{(compare_result12),}\KeywordTok{colMeans}\NormalTok{(compare_result13),}\KeywordTok{colMeans}\NormalTok{(compare_result14))}
+\NormalTok{mean_knn <-}\StringTok{  }\NormalTok{all_mean}
+
+\NormalTok{k_set <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{,}\DecValTok{6}\NormalTok{,}\DecValTok{7}\NormalTok{,}\DecValTok{8}\NormalTok{,}\DecValTok{9}\NormalTok{,}\DecValTok{10}\NormalTok{,}\DecValTok{11}\NormalTok{,}\DecValTok{12}\NormalTok{,}\DecValTok{13}\NormalTok{,}\DecValTok{14}\NormalTok{)}
+
+\KeywordTok{plot}\NormalTok{(k_set , mean_knn, }\DataTypeTok{type =} \StringTok{"l"}\NormalTok{, }\DataTypeTok{main =} \StringTok{"K vs accuracy"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Practicum1_VarunSriram_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 11}
+\KeywordTok{library}\NormalTok{(ggplot2)}
+
+\CommentTok{#Finding error rate = 1 - Accuracy}
+\NormalTok{error_rate <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result5),}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result6),}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result7),}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result8),}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result9),}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result10),}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result11),}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result12),}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result13),}\DecValTok{1}\OperatorTok{-}\KeywordTok{colMeans}\NormalTok{(compare_result14))}
+
+\NormalTok{accuracy <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(k_set,error_rate)}
+
+\KeywordTok{ggplot}\NormalTok{(}\DataTypeTok{data=}\NormalTok{accuracy, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x=}\KeywordTok{factor}\NormalTok{(k_set),}\DataTypeTok{y=}\NormalTok{error_rate)) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_point}\NormalTok{() }\OperatorTok{+}\StringTok{ }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"Neighbors and error"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Practicum1_VarunSriram_files/figure-latex/unnamed-chunk-9-2.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#glass_test$Type}
+
+
+
+
+\CommentTok{#question 12}
+\CommentTok{#Getting confusion matrix for accuracy and other stats}
+\KeywordTok{confusionMatrix}\NormalTok{( }\KeywordTok{as.factor}\NormalTok{(knntest14),}\KeywordTok{as.factor}\NormalTok{(label_test) )}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction  1  2  3  5  6  7
+##          1 10 17  5  2  2 12
+##          2 22 17  3  3  2  4
+##          3  0  1  0  0  0  0
+##          5  0  2  0  0  0  0
+##          6  2  0  0  0  0  0
+##          7  1  0  0  0  0  0
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.2571          
+##                  95% CI : (0.1768, 0.3517)
+##     No Information Rate : 0.3524          
+##     P-Value [Acc > NIR] : 0.9858          
+##                                           
+##                   Kappa : -0.1044         
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: 1 Class: 2 Class: 3 Class: 5 Class: 6 Class: 7
+## Sensitivity           0.28571   0.4595 0.000000  0.00000  0.00000 0.000000
+## Specificity           0.45714   0.5000 0.989691  0.98000  0.98020 0.988764
+## Pos Pred Value        0.20833   0.3333 0.000000  0.00000  0.00000 0.000000
+## Neg Pred Value        0.56140   0.6296 0.923077  0.95146  0.96117 0.846154
+## Prevalence            0.33333   0.3524 0.076190  0.04762  0.03810 0.152381
+## Detection Rate        0.09524   0.1619 0.000000  0.00000  0.00000 0.000000
+## Detection Prevalence  0.45714   0.4857 0.009524  0.01905  0.01905 0.009524
+## Balanced Accuracy     0.37143   0.4797 0.494845  0.49000  0.49010 0.494382
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 13}
+\CommentTok{#Using knnon huge data sets is not the right choice. When n= rows and m= features and both of them are high, the time taken to perform kNN will increase exponentially. }
+\CommentTok{#Every loop has a complexity of o(n) Since there are 3 loops in a knn function, and one of the 3 loops is nested, the total time complexity is O(n) +O(n)+ O(n^2) which is very high.}
+\CommentTok{#When the number of m increases, the data to be checked increases too. }
+\CommentTok{#THEREEFORE, kNN is not suitable for big data sets}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#PROBLEM 2}
+
+\CommentTok{#Question 1}
+\NormalTok{house<-}\KeywordTok{read.csv}\NormalTok{(}\StringTok{"kc_house_data.csv"}\NormalTok{, }\DataTypeTok{sep =} \StringTok{","}\NormalTok{, }\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{)}
+
+\CommentTok{#head(house)}
+\CommentTok{#nrow(house)}
+\CommentTok{#ncol(house)}
+\CommentTok{#summary(house)}
+
+
+\CommentTok{#In India(Mumbai) due to overpopulation, there are certain features of houses that are most aimed for purchasing. The price depends on the number of bedrooms(overpopulation) & bathrooms. The sq.ft determines how big the house is( carpet area doesnt matter) since people renovate the extra housing space that doesnt come up in the carpet are. Also, the newer the home, the costlier it is. Mumbai has less areas with waterfronts and all so it will be a minor factor to consider it in mt kNN alg.}
+\NormalTok{houseforknn<-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(house}\OperatorTok{$}\NormalTok{price,house}\OperatorTok{$}\NormalTok{bedrooms,house}\OperatorTok{$}\NormalTok{bathrooms,house}\OperatorTok{$}\NormalTok{sqft_living, house}\OperatorTok{$}\NormalTok{yr_built)}
+\NormalTok{houseforknn}\OperatorTok{$}\NormalTok{prizeclass <-}\StringTok{ }\DecValTok{0}
+\CommentTok{#head(houseforknn)}
+
+\NormalTok{hrows <-}\StringTok{ }\KeywordTok{nrow}\NormalTok{(houseforknn)}
+
+
+\CommentTok{#Classifying prices into sections depending on their cost. }
+\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{hrows)}
+\NormalTok{\{}
+\NormalTok{  houseforknn}\OperatorTok{$}\NormalTok{prizeclass[i]=}\KeywordTok{ifelse}\NormalTok{(houseforknn}\OperatorTok{$}\NormalTok{house.price[i]}\OperatorTok{<}\DecValTok{250000}\NormalTok{,}\StringTok{"A"}\NormalTok{,}\KeywordTok{ifelse}\NormalTok{(houseforknn}\OperatorTok{$}\NormalTok{house.price[i]}\OperatorTok{<}\DecValTok{500000}\NormalTok{,}\StringTok{"B"}\NormalTok{, }\KeywordTok{ifelse}\NormalTok{(houseforknn}\OperatorTok{$}\NormalTok{house.price[i]}\OperatorTok{<}\DecValTok{750000}\NormalTok{,}\StringTok{"C"}\NormalTok{,}\KeywordTok{ifelse}\NormalTok{(houseforknn}\OperatorTok{$}\NormalTok{house.price[i]}\OperatorTok{<}\DecValTok{1000000}\NormalTok{,}\StringTok{"D"}\NormalTok{,}\KeywordTok{ifelse}\NormalTok{(houseforknn}\OperatorTok{$}\NormalTok{house.price[i]}\OperatorTok{<}\DecValTok{1500000}\NormalTok{,}\StringTok{"E"}\NormalTok{,}\StringTok{"O"}\NormalTok{ )))))}
+
+\NormalTok{\}}
+\KeywordTok{head}\NormalTok{(houseforknn)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   house.price house.bedrooms house.bathrooms house.sqft_living
+## 1      221900              3            1.00              1180
+## 2      538000              3            2.25              2570
+## 3      180000              2            1.00               770
+## 4      604000              4            3.00              1960
+## 5      510000              3            2.00              1680
+## 6     1225000              4            4.50              5420
+##   house.yr_built prizeclass
+## 1           1955          A
+## 2           1951          C
+## 3           1933          A
+## 4           1965          C
+## 5           1987          C
+## 6           2001          E
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#TypeName <- factor(glass$Type, levels = c("1", "2","3","4","5","6", "7"), labels = c("BWFP", "BWNFP", "VWFP", "VWNFP", "C", "T", "HL"))}
+
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{1000}\NormalTok{)}
+\CommentTok{#data partitioning}
+\NormalTok{hindex <-}\StringTok{ }\KeywordTok{createDataPartition}\NormalTok{(}\DataTypeTok{y=}\NormalTok{houseforknn}\OperatorTok{$}\NormalTok{prizeclass, }\DataTypeTok{p=}\FloatTok{0.5}\NormalTok{,}\DataTypeTok{list=}\OtherTok{FALSE}\NormalTok{)}
+
+\CommentTok{#create training set using index}
+\NormalTok{house_training <-}\StringTok{ }\NormalTok{houseforknn[hindex,]}
+
+\CommentTok{#create test data set using -index = other rows excluding index rows}
+\NormalTok{house_test <-}\StringTok{ }\NormalTok{houseforknn[}\OperatorTok{-}\NormalTok{hindex,]}
+
+\CommentTok{#normalizing the values}
+\NormalTok{houseforknn[}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{] <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{lapply}\NormalTok{(houseforknn[}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{], normalize))}
+
+
+\CommentTok{#random unknown test data}
+\NormalTok{htest1 <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{440000}\NormalTok{, }\DecValTok{3}\NormalTok{, }\FloatTok{2.00}\NormalTok{, }\DecValTok{2200}\NormalTok{, }\DecValTok{1995}\NormalTok{)}
+\NormalTok{norm_htest1 <-}\StringTok{ }\KeywordTok{normalize}\NormalTok{(htest1)}
+
+\CommentTok{#finding neighbors in accordance to house data set}
+\NormalTok{house_neighbors <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(train, u)}
+\NormalTok{\{}
+\NormalTok{  m <-}\StringTok{ }\KeywordTok{nrow}\NormalTok{(train)}
+\NormalTok{  ds <-}\StringTok{ }\KeywordTok{numeric}\NormalTok{(m)}
+\NormalTok{  q <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(u[}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{)])}
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{m)}
+\NormalTok{  \{}
+\NormalTok{    p <-}\StringTok{ }\NormalTok{train[i,}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{)]}
+\NormalTok{    ds[i] <-}\StringTok{ }\KeywordTok{d}\NormalTok{(p,q)}
+\NormalTok{  \}}
+\NormalTok{  house_neighbors <-}\StringTok{ }\NormalTok{ds}
+\NormalTok{\}}
+
+\CommentTok{#finding closest neighbors in accordance to house data set}
+\NormalTok{k.closest <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(neigh, k)}
+\NormalTok{\{}
+\NormalTok{  ordered.neigh <-}\StringTok{ }\KeywordTok{order}\NormalTok{(}\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{lapply}\NormalTok{(neigh, unlist)))}
+\NormalTok{  k.closest <-}\StringTok{ }\NormalTok{ordered.neigh[}\DecValTok{1}\OperatorTok{:}\NormalTok{k]}
+\NormalTok{\}}
+
+\CommentTok{#finding mode in closest neighbors in accordance to house data set}
+\NormalTok{Mode <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(x)}
+\NormalTok{\{}
+\NormalTok{  ux <-}\StringTok{ }\KeywordTok{unique}\NormalTok{(x)}
+\NormalTok{  ux[}\KeywordTok{which.max}\NormalTok{(}\KeywordTok{tabulate}\NormalTok{(}\KeywordTok{match}\NormalTok{(x,ux)))]}
+\NormalTok{\}}
+
+
+\CommentTok{#kNN in accordance to house data set}
+\NormalTok{houseknn_ <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(train, u, k)}
+\NormalTok{\{}
+\NormalTok{  nb <-}\StringTok{ }\KeywordTok{house_neighbors}\NormalTok{(train, u)}
+\NormalTok{  f <-}\StringTok{ }\KeywordTok{k.closest}\NormalTok{(nb,k)}
+\NormalTok{  houseknn_<-}\KeywordTok{Mode}\NormalTok{(train}\OperatorTok{$}\NormalTok{prizeclass[f])}
+\NormalTok{\}}
+
+\CommentTok{#arbritrary k values}
+\NormalTok{hk<-}\DecValTok{9}
+\NormalTok{ans_htest1<-}\StringTok{ }\KeywordTok{houseknn_}\NormalTok{(houseforknn,htest1,hk)}
+\NormalTok{ans_htest1}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "A"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#question 2}
+\CommentTok{#I will evaluate the model by checking mainly the sq.ft and the price ratio. Along with that the secondary attirbute to check would be the number of bedrooms since, home with bedrooms are in demand in Mumbai. If the cost to sqft ratio is constant in all scenarios, I feel that the situation that I've presented for my home town will be validated.}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#PROBLEM 3}
+\CommentTok{#Question 1}
+\NormalTok{time <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"occupancyratestimeseries.csv"}\NormalTok{,}\DataTypeTok{sep =} \StringTok{","}\NormalTok{,}\DataTypeTok{header =} \OtherTok{TRUE}\NormalTok{)}
+
+\CommentTok{#head(time)}
+
+\CommentTok{#getting linear model}
+\NormalTok{time_model <-}\StringTok{ }\KeywordTok{lm}\NormalTok{(time}\OperatorTok{$}\NormalTok{OccupancyRate }\OperatorTok{~}\StringTok{ }\NormalTok{time}\OperatorTok{$}\NormalTok{Period)}
+\CommentTok{#print(time_model)}
+\KeywordTok{summary}\NormalTok{(time_model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = time$OccupancyRate ~ time$Period)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -11.714  -5.877  -1.442   4.836  15.179 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 34.94191    1.14667  30.473   <2e-16 ***
+## time$Period  0.01510    0.01191   1.267    0.207    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 7.354 on 164 degrees of freedom
+## Multiple R-squared:  0.0097, Adjusted R-squared:  0.003662 
+## F-statistic: 1.606 on 1 and 164 DF,  p-value: 0.2068
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#plot(time_model)}
+
+\NormalTok{time_model}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = time$OccupancyRate ~ time$Period)
+## 
+## Coefficients:
+## (Intercept)  time$Period  
+##     34.9419       0.0151
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{forecast167 <-}\StringTok{ }\NormalTok{((}\DecValTok{167}\NormalTok{)}\OperatorTok{*}\FloatTok{0.01510}\NormalTok{) }\OperatorTok{+}\StringTok{ }\FloatTok{34.94191}
+\NormalTok{forecast167}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 37.46361
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#forecast calculated is in between 22.75 & 52.13 , which is within the interval}
+\NormalTok{val<-}\StringTok{ }\KeywordTok{predict}\NormalTok{(time_model, }\DataTypeTok{newdata =} \KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{Period=}\DecValTok{167}\NormalTok{), }\DataTypeTok{interval =} \StringTok{"predict"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: 'newdata' had 1 row but variables found have 166 rows
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{val}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          fit      lwr      upr
+## 1   34.95700 20.26487 49.64914
+## 2   34.97210 20.28305 49.66115
+## 3   34.98719 20.30119 49.67319
+## 4   35.00229 20.31930 49.68527
+## 5   35.01739 20.33738 49.69739
+## 6   35.03248 20.35541 49.70955
+## 7   35.04758 20.37341 49.72175
+## 8   35.06267 20.39137 49.73398
+## 9   35.07777 20.40929 49.74624
+## 10  35.09286 20.42718 49.75855
+## 11  35.10796 20.44503 49.77089
+## 12  35.12306 20.46284 49.78327
+## 13  35.13815 20.48061 49.79569
+## 14  35.15325 20.49835 49.80814
+## 15  35.16834 20.51605 49.82063
+## 16  35.18344 20.53372 49.83316
+## 17  35.19854 20.55134 49.84573
+## 18  35.21363 20.56893 49.85833
+## 19  35.22873 20.58648 49.87097
+## 20  35.24382 20.60399 49.88365
+## 21  35.25892 20.62147 49.89637
+## 22  35.27401 20.63891 49.90912
+## 23  35.28911 20.65631 49.92191
+## 24  35.30421 20.67367 49.93474
+## 25  35.31930 20.69100 49.94760
+## 26  35.33440 20.70829 49.96051
+## 27  35.34949 20.72554 49.97345
+## 28  35.36459 20.74275 49.98642
+## 29  35.37969 20.75993 49.99944
+## 30  35.39478 20.77707 50.01249
+## 31  35.40988 20.79417 50.02558
+## 32  35.42497 20.81124 50.03871
+## 33  35.44007 20.82826 50.05188
+## 34  35.45516 20.84525 50.06508
+## 35  35.47026 20.86220 50.07832
+## 36  35.48536 20.87911 50.09160
+## 37  35.50045 20.89599 50.10491
+## 38  35.51555 20.91283 50.11827
+## 39  35.53064 20.92963 50.13166
+## 40  35.54574 20.94639 50.14509
+## 41  35.56084 20.96312 50.15856
+## 42  35.57593 20.97980 50.17206
+## 43  35.59103 20.99645 50.18560
+## 44  35.60612 21.01306 50.19918
+## 45  35.62122 21.02964 50.21280
+## 46  35.63632 21.04617 50.22646
+## 47  35.65141 21.06267 50.24015
+## 48  35.66651 21.07913 50.25388
+## 49  35.68160 21.09556 50.26765
+## 50  35.69670 21.11194 50.28145
+## 51  35.71179 21.12829 50.29530
+## 52  35.72689 21.14460 50.30918
+## 53  35.74199 21.16087 50.32310
+## 54  35.75708 21.17710 50.33706
+## 55  35.77218 21.19330 50.35105
+## 56  35.78727 21.20946 50.36509
+## 57  35.80237 21.22558 50.37916
+## 58  35.81747 21.24166 50.39327
+## 59  35.83256 21.25771 50.40742
+## 60  35.84766 21.27371 50.42160
+## 61  35.86275 21.28968 50.43582
+## 62  35.87785 21.30561 50.45009
+## 63  35.89294 21.32151 50.46438
+## 64  35.90804 21.33736 50.47872
+## 65  35.92314 21.35318 50.49310
+## 66  35.93823 21.36896 50.50751
+## 67  35.95333 21.38470 50.52196
+## 68  35.96842 21.40040 50.53645
+## 69  35.98352 21.41607 50.55097
+## 70  35.99862 21.43169 50.56554
+## 71  36.01371 21.44728 50.58014
+## 72  36.02881 21.46283 50.59478
+## 73  36.04390 21.47835 50.60946
+## 74  36.05900 21.49382 50.62417
+## 75  36.07409 21.50926 50.63893
+## 76  36.08919 21.52466 50.65372
+## 77  36.10429 21.54002 50.66855
+## 78  36.11938 21.55535 50.68342
+## 79  36.13448 21.57063 50.69832
+## 80  36.14957 21.58588 50.71327
+## 81  36.16467 21.60109 50.72825
+## 82  36.17977 21.61626 50.74327
+## 83  36.19486 21.63140 50.75833
+## 84  36.20996 21.64649 50.77342
+## 85  36.22505 21.66155 50.78856
+## 86  36.24015 21.67657 50.80373
+## 87  36.25525 21.69155 50.81894
+## 88  36.27034 21.70649 50.83419
+## 89  36.28544 21.72140 50.84947
+## 90  36.30053 21.73627 50.86480
+## 91  36.31563 21.75110 50.88016
+## 92  36.33072 21.76589 50.89556
+## 93  36.34582 21.78065 50.91100
+## 94  36.36092 21.79536 50.92647
+## 95  36.37601 21.81004 50.94198
+## 96  36.39111 21.82468 50.95754
+## 97  36.40620 21.83928 50.97313
+## 98  36.42130 21.85385 50.98875
+## 99  36.43640 21.86837 51.00442
+## 100 36.45149 21.88286 51.02012
+## 101 36.46659 21.89731 51.03586
+## 102 36.48168 21.91172 51.05164
+## 103 36.49678 21.92610 51.06746
+## 104 36.51187 21.94044 51.08331
+## 105 36.52697 21.95473 51.09921
+## 106 36.54207 21.96899 51.11514
+## 107 36.55716 21.98322 51.13111
+## 108 36.57226 21.99740 51.14711
+## 109 36.58735 22.01155 51.16316
+## 110 36.60245 22.02566 51.17924
+## 111 36.61755 22.03973 51.19536
+## 112 36.63264 22.05376 51.21152
+## 113 36.64774 22.06776 51.22771
+## 114 36.66283 22.08172 51.24395
+## 115 36.67793 22.09564 51.26022
+## 116 36.69302 22.10952 51.27653
+## 117 36.70812 22.12336 51.29288
+## 118 36.72322 22.13717 51.30926
+## 119 36.73831 22.15094 51.32569
+## 120 36.75341 22.16467 51.34215
+## 121 36.76850 22.17836 51.35864
+## 122 36.78360 22.19202 51.37518
+## 123 36.79870 22.20564 51.39175
+## 124 36.81379 22.21922 51.40837
+## 125 36.82889 22.23276 51.42502
+## 126 36.84398 22.24626 51.44170
+## 127 36.85908 22.25973 51.45843
+## 128 36.87418 22.27316 51.47519
+## 129 36.88927 22.28655 51.49199
+## 130 36.90437 22.29990 51.50883
+## 131 36.91946 22.31322 51.52571
+## 132 36.93456 22.32650 51.54262
+## 133 36.94965 22.33974 51.55957
+## 134 36.96475 22.35294 51.57656
+## 135 36.97985 22.36611 51.59358
+## 136 36.99494 22.37924 51.61065
+## 137 37.01004 22.39233 51.62775
+## 138 37.02513 22.40538 51.64489
+## 139 37.04023 22.41839 51.66206
+## 140 37.05533 22.43137 51.67928
+## 141 37.07042 22.44431 51.69653
+## 142 37.08552 22.45722 51.71382
+## 143 37.10061 22.47008 51.73115
+## 144 37.11571 22.48291 51.74851
+## 145 37.13080 22.49570 51.76591
+## 146 37.14590 22.50845 51.78335
+## 147 37.16100 22.52117 51.80083
+## 148 37.17609 22.53385 51.81834
+## 149 37.19119 22.54649 51.83589
+## 150 37.20628 22.55909 51.85348
+## 151 37.22138 22.57166 51.87110
+## 152 37.23648 22.58418 51.88877
+## 153 37.25157 22.59668 51.90647
+## 154 37.26667 22.60913 51.92420
+## 155 37.28176 22.62155 51.94198
+## 156 37.29686 22.63393 51.95979
+## 157 37.31195 22.64627 51.97764
+## 158 37.32705 22.65857 51.99553
+## 159 37.34215 22.67084 52.01345
+## 160 37.35724 22.68307 52.03141
+## 161 37.37234 22.69527 52.04941
+## 162 37.38743 22.70742 52.06744
+## 163 37.40253 22.71954 52.08552
+## 164 37.41763 22.73163 52.10362
+## 165 37.43272 22.74367 52.12177
+## 166 37.44782 22.75568 52.13995
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#linear models are mostly accurate in forecasting, but biasing would lead to improper prediction and wouldn't predict outliers.}
+\end{Highlighting}
+\end{Shaded}
+
+
+\end{document}

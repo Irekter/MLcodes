@@ -1,0 +1,132 @@
+---
+title: "Assignment 1"
+author: "Varun Sriram"
+Term: "DA5030 Fall 2018"
+date: "September 13, 2018"
+---
+
+```{r, Question 1}
+#Reading the csv file into R
+assignment1 <- read.csv("customertxndata.csv",sep=",", header=TRUE)
+
+#Cross checking if the right table / data frame has been loaded
+head(assignment1)
+```
+
+```{r, Question 2}
+
+#Adding column names to the data frame
+colnames(assignment1)<-c("Visits","Transaction", "OS", "Gender", "Revenue")
+
+#Checking if the columns have been added
+head(assignment1)
+
+#Getting the total number of entries by counting the number of rowa
+total_cases <- nrow(assignment1)
+total_cases
+
+#Calculating the mean visits
+mean_visits <- mean(assignment1$Visits)
+mean_visits
+
+#Calculating median revenue
+median_revenue <- median(assignment1$Revenue)
+median_revenue
+
+#Creating a new table with omitted transactions using na.omit
+omitted_transactions = na.omit(assignment1$Transaction)
+
+#Calculating maximum and minimum transaction value
+max_transactions <- max(omitted_transactions)
+min_transactions <- min(omitted_transactions)
+max_transactions
+min_transactions
+
+#Checking most commonly used OS by summary
+summary(assignment1$OS)
+```
+
+```{r, Question 3}
+
+#Creating a basic scatterplot diagram for Visits & Revenue
+plot(assignment1$Visits, assignment1$Revenue, main="Basic Scatterplot", xlab = "VISITS", ylab = ("REVENUE"))
+
+#Finding the co-relation between the two specified in the scatterplot diagram
+cor(assignment1$Visits,assignment1$Revenue)
+```
+
+```{r, Question 4}
+
+#Checking for every column for the presence of NA vlaues using is.na() 
+any(is.na(assignment1$visits))
+any(is.na(assignment1$Transaction))
+any(is.na(assignment1$OS))
+any(is.na(assignment1$Gender))
+any(is.na(assignment1$Revenue))
+
+#I will impute the transaction values using mean imputation & gender values using ifelse
+```
+
+```{r, Question 5}
+
+#Duplicating original data frame to new to keep original variable intact
+imputed_assignment1 <- assignment1
+
+#Get mean value of transaction
+mean_transaction <- mean(imputed_assignment1$Transaction , na.rm = T)
+
+#Substituting NA with mean values
+imputed_assignment1$Transaction[is.na(imputed_assignment1$Transaction)] = mean_transaction
+
+summary(imputed_assignment1$Gender)
+summary(imputed_assignment1$Revenue)
+
+#Calculate mean revenue
+mean_revenue <- mean(imputed_assignment1$Revenue)
+
+#Replacing NA in gender using logic: People with revenue, higher that mean revenue will be female and likewise 
+imputed_assignment1$Gender[is.na(imputed_assignment1$Gender)]=ifelse(imputed_assignment1$Revenue > mean_revenue, "Female","Male")
+
+imputed_assignment1
+
+```
+
+```{r, Question 6}
+#Calculating training data with odd numbered rows
+training_data<- data.frame(imputed_assignment1[seq(1,22799,2),])
+#Calculating training data with even numbered rows
+validation_data<-data.frame(imputed_assignment1[seq(2,22799,2),])
+training_data
+validation_data
+```
+
+```{r, Question 7}
+#Getting means of the training and validation data
+mean_training_data <- mean(training_data$Revenue)
+mean_validation_data <- mean(validation_data$Revenue)
+mean_training_data
+mean_validation_data
+
+#The training data can predict the validation data since they're almost equal.
+```
+```{r, Question 8}
+#Imported the library ISLR
+library(ISLR)
+
+#Divinding the sample size of our data set into 2 halves for training and testing data
+sample_size=floor(0.5*nrow(imputed_assignment1))
+sample_size
+
+#make sure the same random numbers are generated
+set.seed(99)
+
+#Indentfy rows from imputed_assignment data frame and stores it in the variable according to the sample space
+sample_rows=sample(seq_len(nrow(imputed_assignment1)),size=sample_size)
+
+#Storing the 2 havles of data into testing and training data respectively
+new_test=imputed_assignment1[sample_rows,]
+new_train=imputed_assignment1[-sample_rows,]
+
+new_train
+new_test
+```

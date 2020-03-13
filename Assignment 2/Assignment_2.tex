@@ -1,0 +1,472 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={R Notebook},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{R Notebook}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{}
+    \preauthor{}\postauthor{}
+    \date{}
+    \predate{}\postdate{}
+  
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Question 1}
+
+\CommentTok{# Finding outliers using Assaults since there is variation in the arrests column}
+
+\KeywordTok{head}\NormalTok{(USArrests)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            Murder Assault UrbanPop Rape
+## Alabama      13.2     236       58 21.2
+## Alaska       10.0     263       48 44.5
+## Arizona       8.1     294       80 31.0
+## Arkansas      8.8     190       50 19.5
+## California    9.0     276       91 40.6
+## Colorado      7.9     204       78 38.7
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Arrests <-}\StringTok{ }\NormalTok{USArrests}
+
+\NormalTok{sd_assault <-}\StringTok{ }\KeywordTok{sd}\NormalTok{(Arrests}\OperatorTok{$}\NormalTok{Assault)}
+\NormalTok{mean_assault <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(Arrests}\OperatorTok{$}\NormalTok{Assault)}
+
+\NormalTok{sd_assault}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 83.33766
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mean_assault}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 170.76
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{z_assault <-}\StringTok{ }\NormalTok{mean_assault}\OperatorTok{-}\NormalTok{Arrests}\OperatorTok{$}\NormalTok{Assault}
+\NormalTok{z_assault<-}\StringTok{ }\NormalTok{z_assault}\OperatorTok{/}\NormalTok{sd_assault}
+
+\NormalTok{z_assault}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] -0.78283935 -1.10682252 -1.47880321 -0.23086801 -1.26281442
+##  [6] -0.39885929  0.72908214 -0.80683810 -1.97077766 -0.48285493
+## [11]  1.49704226  0.60908837 -0.93883125  0.69308401  1.37704849
+## [16]  0.66908525  0.74108152 -0.93883125  1.05306531 -1.55079947
+## [21]  0.26110644 -1.01082751  1.18505846 -1.05882502 -0.08687549
+## [26]  0.74108152  0.82507715 -0.97482938  1.36504911  0.14111267
+## [31] -1.37080881 -0.99882813 -1.99477641  1.50904164  0.60908837
+## [36]  0.23710769  0.14111267  0.77707965 -0.03887798 -1.29881255
+## [41]  1.01706718 -0.20686926 -0.36286116  0.60908837  1.47304350
+## [46]  0.17711080  0.30910395  1.07706407  1.41304662  0.11711392
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{mean}\NormalTok{(z_assault)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] -1.112408e-16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{z_assault<-}\KeywordTok{abs}\NormalTok{(z_assault)}
+
+\NormalTok{outliers <-}\StringTok{ }\NormalTok{z_assault[}\KeywordTok{which}\NormalTok{(z_assault }\OperatorTok{>}\StringTok{ }\FloatTok{1.5}\NormalTok{)]}
+\NormalTok{outliers<-}\StringTok{ }\KeywordTok{which}\NormalTok{(z_assault }\OperatorTok{>}\StringTok{ }\FloatTok{1.5}\NormalTok{)}
+\NormalTok{outliers}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1]  9 20 33 34
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Question 2}
+\KeywordTok{cor}\NormalTok{(Arrests}\OperatorTok{$}\NormalTok{Murder,Arrests}\OperatorTok{$}\NormalTok{Assault)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.8018733
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{cor}\NormalTok{(}\DataTypeTok{x=}\NormalTok{Arrests}\OperatorTok{$}\NormalTok{Murder,}\DataTypeTok{y=}\NormalTok{Arrests}\OperatorTok{$}\NormalTok{Assault, }\DataTypeTok{method =} \StringTok{"pearson"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.8018733
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Question 3}
+
+\NormalTok{mobile <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"Mobiledata.csv"}\NormalTok{,}\DataTypeTok{sep=}\StringTok{","}\NormalTok{, }\DataTypeTok{header=}\OtherTok{TRUE}\NormalTok{)}
+\CommentTok{#head(mobile)}
+
+\CommentTok{#forecast using simple moving avg}
+\CommentTok{#simple moving avg , take avg of last 3 years}
+\NormalTok{n<-}\KeywordTok{nrow}\NormalTok{(mobile)}
+\NormalTok{last3_mov_avg <-}\StringTok{ }\NormalTok{mobile[n}\OperatorTok{:}\NormalTok{(n}\OperatorTok{-}\DecValTok{2}\NormalTok{),}\DecValTok{2}\NormalTok{]}
+\NormalTok{mov_avg_mobile <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(last3_mov_avg)}
+\NormalTok{last3_mov_avg}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 202944033 173959368 150641403
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#weighted moving avg}
+\NormalTok{weights <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{4}\NormalTok{,}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{)}
+\NormalTok{n<-}\KeywordTok{nrow}\NormalTok{(mobile)}
+\NormalTok{last3 <-}\StringTok{ }\NormalTok{mobile[n}\OperatorTok{:}\NormalTok{(n}\OperatorTok{-}\DecValTok{2}\NormalTok{),}\DecValTok{2}\NormalTok{] }
+\NormalTok{w_avg <-}\StringTok{ }\NormalTok{weights }\OperatorTok{*}\StringTok{ }\NormalTok{last3}
+\NormalTok{F<-}\StringTok{ }\KeywordTok{sum}\NormalTok{(w_avg)}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(weights)}
+\NormalTok{F}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 189396151
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Exponential smoothing}
+\NormalTok{exp_mobile<-mobile}
+\NormalTok{exp_mobile}\OperatorTok{$}\NormalTok{forecast <-}\StringTok{ }\DecValTok{0}
+\NormalTok{exp_mobile}\OperatorTok{$}\NormalTok{forecast[}\DecValTok{1}\NormalTok{]<-exp_mobile[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{]}
+\NormalTok{exp_mobile}\OperatorTok{$}\NormalTok{Error <-}\StringTok{ }\DecValTok{0}
+
+\NormalTok{alpha <-}\StringTok{ }\FloatTok{0.2}
+\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{2}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(exp_mobile))}
+\NormalTok{\{}
+\NormalTok{  exp_mobile}\OperatorTok{$}\NormalTok{forecast[i]<-exp_mobile}\OperatorTok{$}\NormalTok{forecast[i}\OperatorTok{-}\DecValTok{1}\NormalTok{]}\OperatorTok{+}\NormalTok{alpha}\OperatorTok{*}\NormalTok{exp_mobile}\OperatorTok{$}\NormalTok{Error[i}\OperatorTok{-}\DecValTok{1}\NormalTok{]}
+\NormalTok{  exp_mobile}\OperatorTok{$}\NormalTok{Error[i]<-exp_mobile[i,}\DecValTok{2}\NormalTok{]}\OperatorTok{-}\NormalTok{exp_mobile}\OperatorTok{$}\NormalTok{forecast[i]}
+\NormalTok{\}}
+\NormalTok{exp_mobile}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Year Subscribers  forecast    Error
+## 1     1    23188171  23188171        0
+## 2     2    28745769  23188171  5557598
+## 3     3    34880964  24299691 10581273
+## 4     4    46373266  26415945 19957321
+## 5     5    65605000  30407409 35197591
+## 6     6    86210336  37446928 48763408
+## 7     7    99918621  47199609 52719012
+## 8     8   120980103  57743412 63236691
+## 9     9   150641403  70390750 80250653
+## 10   10   173959368  86440880 87518488
+## 11   11   202944033 103944578 98999455
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#final year forecast}
+\NormalTok{exp_forecast12<-}\StringTok{ }\NormalTok{exp_mobile}\OperatorTok{$}\NormalTok{forecast[}\DecValTok{11}\NormalTok{]}\OperatorTok{+}\NormalTok{alpha}\OperatorTok{*}\NormalTok{exp_mobile}\OperatorTok{$}\NormalTok{Error[}\DecValTok{11}\NormalTok{]}
+
+
+
+
+\CommentTok{#Linear Regression trend line}
+\NormalTok{model <-}\StringTok{ }\KeywordTok{lm}\NormalTok{(mobile}\OperatorTok{$}\NormalTok{Subscribers }\OperatorTok{~}\StringTok{ }\NormalTok{mobile}\OperatorTok{$}\NormalTok{Year)}
+\KeywordTok{print}\NormalTok{(model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = mobile$Subscribers ~ mobile$Year)
+## 
+## Coefficients:
+## (Intercept)  mobile$Year  
+##   -15710760     18276748
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = mobile$Subscribers ~ mobile$Year)
+## 
+## Residuals:
+##       Min        1Q    Median        3Q       Max 
+## -12307858  -9795553  -4238521   7402838  20622182 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -15710760    8041972  -1.954   0.0825 .  
+## mobile$Year  18276748    1185724  15.414  8.9e-08 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 12440000 on 9 degrees of freedom
+## Multiple R-squared:  0.9635, Adjusted R-squared:  0.9594 
+## F-statistic: 237.6 on 1 and 9 DF,  p-value: 8.903e-08
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#forcasting all years subscribers}
+\NormalTok{trendline_mobile <-}\StringTok{ }\NormalTok{mobile}
+\NormalTok{trendline_mobile}\OperatorTok{$}\NormalTok{forecast <-}\StringTok{ }\DecValTok{0}
+\NormalTok{trendline_mobile}\OperatorTok{$}\NormalTok{forecast[}\DecValTok{1}\NormalTok{] <-}\StringTok{ }\NormalTok{trendline_mobile[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{]}
+\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{2}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(trendline_mobile))}
+\NormalTok{\{}
+\NormalTok{  trendline_mobile}\OperatorTok{$}\NormalTok{forecast[i] <-}\StringTok{ }\OperatorTok{-}\DecValTok{1571076} \OperatorTok{+}\StringTok{ }\DecValTok{18276748}\OperatorTok{*}\NormalTok{(i}\OperatorTok{-}\DecValTok{1}\NormalTok{)}
+\NormalTok{\}}
+\CommentTok{#getting year 12 forecast}
+\NormalTok{trendline_forecast_}\DecValTok{12}\NormalTok{ <-}\StringTok{ }\OperatorTok{-}\DecValTok{1571076} \OperatorTok{+}\StringTok{ }\DecValTok{18276748}\OperatorTok{*}\NormalTok{(}\DecValTok{11}\NormalTok{)}
+\NormalTok{trendline_forecast_}\DecValTok{12}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 199473152
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Question 4}
+
+
+\CommentTok{#Mean squared error, using data frame already set in question 3}
+\NormalTok{exp_mobile}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Year Subscribers  forecast    Error
+## 1     1    23188171  23188171        0
+## 2     2    28745769  23188171  5557598
+## 3     3    34880964  24299691 10581273
+## 4     4    46373266  26415945 19957321
+## 5     5    65605000  30407409 35197591
+## 6     6    86210336  37446928 48763408
+## 7     7    99918621  47199609 52719012
+## 8     8   120980103  57743412 63236691
+## 9     9   150641403  70390750 80250653
+## 10   10   173959368  86440880 87518488
+## 11   11   202944033 103944578 98999455
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#head(exp_mobile)}
+\NormalTok{mse_exp <-}\StringTok{ }\KeywordTok{mean}\NormalTok{((exp_mobile}\OperatorTok{$}\NormalTok{forecast }\OperatorTok{-}\StringTok{ }\NormalTok{exp_mobile}\OperatorTok{$}\NormalTok{Error ) }\OperatorTok{^}\StringTok{ }\DecValTok{2}\NormalTok{)}
+\NormalTok{mse_exp}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.284472e+14
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#mean squared error for weighted moving avg}
+\NormalTok{last3_wma_error <-}\StringTok{ }\NormalTok{w_avg }\OperatorTok{-}\StringTok{ }\NormalTok{F}
+\NormalTok{last3_wma_errorsq <-}\StringTok{ }\NormalTok{last3_wma_error }\OperatorTok{^}\StringTok{ }\DecValTok{2}
+\NormalTok{mse_wma <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(last3_wma_errorsq)}
+\NormalTok{mse_wma}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.29699e+17
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#mean squared error for linear regression}
+\NormalTok{trendline_mobile}\OperatorTok{$}\NormalTok{error <-}\StringTok{ }\NormalTok{trendline_mobile}\OperatorTok{$}\NormalTok{Subscribers }\OperatorTok{-}\StringTok{ }\NormalTok{trendline_mobile}\OperatorTok{$}\NormalTok{forecast}
+\NormalTok{mse_trendline <-}\StringTok{ }\KeywordTok{mean}\NormalTok{((trendline_mobile}\OperatorTok{$}\NormalTok{forecast }\OperatorTok{-}\StringTok{ }\NormalTok{trendline_mobile}\OperatorTok{$}\NormalTok{error ) }\OperatorTok{^}\StringTok{ }\DecValTok{2}\NormalTok{)}
+\NormalTok{mse_trendline}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.079309e+16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Question 5}
+\CommentTok{#Minimum mean squared errors among the above}
+\NormalTok{minimum_mse <-}\StringTok{ }\NormalTok{mse_exp}
+\NormalTok{minimum_mse}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.284472e+14
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Question 6}
+
+\CommentTok{#getting the weighted avg forecast}
+\NormalTok{final_Weighted_avgforecast <-}\StringTok{ }\NormalTok{(}\DecValTok{3}\OperatorTok{*}\NormalTok{trendline_forecast_}\DecValTok{12} \OperatorTok{+}\StringTok{ }\DecValTok{2}\OperatorTok{*}\NormalTok{exp_forecast12 }\OperatorTok{+}\StringTok{ }\NormalTok{F)}\OperatorTok{/}\DecValTok{6}
+\NormalTok{final_Weighted_avgforecast}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 172550757
+\end{verbatim}
+
+
+\end{document}

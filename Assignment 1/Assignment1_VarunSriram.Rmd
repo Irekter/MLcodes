@@ -1,0 +1,143 @@
+---
+title: "R Notebook"
+class: DA 5030 Fall 2018
+name: Varun Sriram
+assignment: 2
+---
+
+
+```{r,Question 1}
+#Question 1
+
+# Finding outliers using Assaults since there is variation in the arrests column
+
+head(USArrests)
+Arrests <- USArrests
+
+sd_assault <- sd(Arrests$Assault)
+mean_assault <- mean(Arrests$Assault)
+
+sd_assault
+mean_assault
+
+z_assault <- mean_assault-Arrests$Assault
+z_assault<- z_assault/sd_assault
+
+z_assault
+
+mean(z_assault)
+
+z_assault<-abs(z_assault)
+
+outliers <- z_assault[which(z_assault > 1.5)]
+outliers<- which(z_assault > 1.5)
+outliers
+
+```
+
+```{r, Question 2}
+#Question 2
+cor(Arrests$Murder,Arrests$Assault)
+
+cor(x=Arrests$Murder,y=Arrests$Assault, method = "pearson")
+```
+
+```{r, Question 3}
+#Question 3
+
+mobile <- read.csv("Mobiledata.csv",sep=",", header=TRUE)
+#head(mobile)
+
+#forecast using simple moving avg
+#simple moving avg , take avg of last 3 years
+n<-nrow(mobile)
+last3_mov_avg <- mobile[n:(n-2),2]
+mov_avg_mobile <- mean(last3_mov_avg)
+last3_mov_avg
+
+
+#weighted moving avg
+weights <- c(4,1,1)
+n<-nrow(mobile)
+last3 <- mobile[n:(n-2),2] 
+w_avg <- weights * last3
+F<- sum(w_avg)/sum(weights)
+F
+
+#Exponential smoothing
+exp_mobile<-mobile
+exp_mobile$forecast <- 0
+exp_mobile$forecast[1]<-exp_mobile[1,2]
+exp_mobile$Error <- 0
+
+alpha <- 0.2
+for(i in 2:nrow(exp_mobile))
+{
+  exp_mobile$forecast[i]<-exp_mobile$forecast[i-1]+alpha*exp_mobile$Error[i-1]
+  exp_mobile$Error[i]<-exp_mobile[i,2]-exp_mobile$forecast[i]
+}
+exp_mobile
+#final year forecast
+exp_forecast12<- exp_mobile$forecast[11]+alpha*exp_mobile$Error[11]
+
+
+
+
+#Linear Regression trend line
+model <- lm(mobile$Subscribers ~ mobile$Year)
+print(model)
+summary(model)
+
+#forcasting all years subscribers
+trendline_mobile <- mobile
+trendline_mobile$forecast <- 0
+trendline_mobile$forecast[1] <- trendline_mobile[1,2]
+for(i in 2:nrow(trendline_mobile))
+{
+  trendline_mobile$forecast[i] <- -1571076 + 18276748*(i-1)
+}
+#getting year 12 forecast
+trendline_forecast_12 <- -1571076 + 18276748*(11)
+trendline_forecast_12
+```
+
+```{r, Question 4}
+#Question 4
+
+
+#Mean squared error, using data frame already set in question 3
+exp_mobile
+#head(exp_mobile)
+mse_exp <- mean((exp_mobile$forecast - exp_mobile$Error ) ^ 2)
+mse_exp
+
+  
+#mean squared error for weighted moving avg
+last3_wma_error <- w_avg - F
+last3_wma_errorsq <- last3_wma_error ^ 2
+mse_wma <- mean(last3_wma_errorsq)
+mse_wma
+
+
+#mean squared error for linear regression
+trendline_mobile$error <- trendline_mobile$Subscribers - trendline_mobile$forecast
+mse_trendline <- mean((trendline_mobile$forecast - trendline_mobile$error ) ^ 2)
+mse_trendline
+
+```
+
+```{r, Question 5}
+#Question 5
+#Minimum mean squared errors among the above
+minimum_mse <- mse_exp
+minimum_mse
+```
+
+```{r, Question 6}
+#Question 6
+
+#getting the weighted avg forecast
+final_Weighted_avgforecast <- (3*trendline_forecast_12 + 2*exp_forecast12 + F)/6
+final_Weighted_avgforecast
+
+```

@@ -1,0 +1,1884 @@
+---
+title: "DA5030.P2.VelosoSriramKarwarkar"
+author: "Josiah Veloso"
+group_members: "Varun Sriram and Aneesh Karwarkar"
+date: "November 3, 2018"
+output: pdf_document
+---
+
+```{r Problem 1 Question 1-Josiah}
+#Added my own headers and renamed the original file + made into a csv
+Income<-read.csv("Cenadults.csv")
+str(Income)
+Income<-Income[-32562,]#removes the extra space from the original dataframe
+#The value of 32561 is the TOTAL ROWS OF DATA overall
+```
+
+```{r Problem 1 Question 2-Josiah}
+library(psych)
+pairs.panels(Income[c("workclass","education","marital.status","occupation","relationship","race","sex","native.country","income")])
+#in this initial examination WITHOUT SCALING ANYTHING there is little significant correlation between most of the notable categorical values. 
+#Relationship and sex have noticable correlation
+#if there was need to use the categorical variables - many of them seem to have a very prominent binomial relationship or 
+#an extreme skew so a transform might have to be necessary for some ML algorithims. However for Naive bayes - we do not need to do such a thing
+#This is because we are using only categorical variables to predict rather than continuous variables.
+#At best occupation seems to be rather spread out and non-binomial.
+```
+
+```{r Problem 1 Question 3-Josiah}
+#Frequencies calculated first and then likelihoods - all in one table each
+#Pred1<-NBC(FrequencyTIncome,FrequencyTRace[5,3],FrequencyTSex[1,3],FrequencyTAdult[2,3],FrequencyTWorkclass[2,3],FrequencyTEducation[10,3],FrequencyTNC[20,3]) <- this will potentially be our parameters for the custom NB function
+Income$IsAdult<-ifelse(Income$age>=18,1,0) #The next question asks if she is an adult so a binary boolean category has to be made
+Income2<-as.data.frame(Income[,c(15,9,10,16,2,4,14,6,7,8)])#We will only use the first 7 columns eventually (We will exclude columns 6,7,8)
+Income2$income<-ifelse(as.character(Income2$income)==as.character(" <=50K"),1,0)
+
+PrR<-nrow(Income2)
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:PrR,]<-NA;
+TestSplitter[,1:10]<-NA;#TestSplitter[,1:7]<-NA; is the parts we will eventually use
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:PrR,]<-NA;
+OtherTestSplitter[,1:10]<-NA;#TestSplitter[,1:7]<-NA; is the parts we will eventually use
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country","marital.status","occupation","relationship")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country","marital.status","occupation","relationship")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:PrR)
+{
+   for(a in 1:10) #REMINDER change to 1:7 in future tables
+     ifelse(Income2[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(Income2[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(Income2[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+
+OATot<-nrow(Income2)#Total overall rows
+TotalInL<-nrow(Splitter)#number of rows for people <=50K
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTMS<-as.data.frame(table(Splitter$marital.status))
+FrequencyTMS[,3]<-as.data.frame(FrequencyTMS[,2]/TotalInL)
+FrequencyTOccupation<-as.data.frame(table(Splitter$occupation))
+FrequencyTOccupation[,3]<-as.data.frame(FrequencyTOccupation[,2]/TotalInL)
+FrequencyTRelationship<-as.data.frame(table(Splitter$relationship))
+FrequencyTRelationship[,3]<-as.data.frame(FrequencyTRelationship[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+##
+FrequencyTNCNAMES<-as.data.frame(table(Splitter$native.country)) #This will be used to deal with question 5 in a future issue
+##
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+```
+
+```{r Problem 1 Question 3 cont.p1B-Josiah}
+TotalInG<-nrow(AltSplitter)#number of rows for people >50K
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTMSA<-as.data.frame(table(AltSplitter$marital.status))
+FrequencyTMSA[,3]<-as.data.frame(FrequencyTMSA[,2]/TotalInG)
+FrequencyTOccupationA<-as.data.frame(table(AltSplitter$occupation))
+FrequencyTOccupationA[,3]<-as.data.frame(FrequencyTOccupationA[,2]/TotalInG)
+FrequencyTRelationshipA<-as.data.frame(table(AltSplitter$relationship))
+FrequencyTRelationshipA[,3]<-as.data.frame(FrequencyTRelationshipA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+```
+
+
+```{r Problem 1 Question 3 cont.p2 -Josiah}
+#The custom naive bayes classifier
+#fits 7 arguments fitting exactly the next question
+#The first argument "x" is going to be the potential primary category to classify
+#FrequencyTRace[5,2] Testing if index in dataframe works - note index number labels are wrong
+#Naive Bayes = Likelihood(concentrated variable likelihood * x-features)
+#/ DIVIDED BY
+#Total Likelihood (concentrated variable likelihood * x-feature + other alternate variable likelihood * x-features)
+#We are detecting income so it would be if income less than 50K (<=50K) of x[1,3] VS income greater than 50K (>50K) of x[2,3]
+NBC<-function(x,r,s,a,w,e,nc){
+  A=(x[1,3]*r*s*a*w*e*nc) #probability of <=50K
+  B=(FrequencyTIncomeA[1,3]*FrequencyTRaceA[5,3]*FrequencyTSexA[1,3]*FrequencyTAdultA[1,3]*FrequencyTWorkclassA[2,3]*FrequencyTEducationA[10,3]*FrequencyTNCA[20,3]) #this is because of the table split xa has to be called aka the probability of >50K
+  NBC<-A/(A+B)
+}
+#note this function has been fitted so the first argument is only going to be FrequencyTincome aka the <=50K probability table is first parameters
+```
+
+```{r Problem 1 Question 4 Josiah}
+#Initial prediction
+FrequencyTRace[5,1] #check race = white
+FrequencyTSex[1,1] #check sex = female
+FrequencyTAdult[2,1] #check if adult = 1 = yes
+FrequencyTWorkclass[2,1] #check working class = federal govt. worker
+FrequencyTEducation[10,1] #check education = bachelors degree
+FrequencyTNC[20,1] #check native country = India
+Pred1<-NBC(FrequencyTIncome,FrequencyTRace[5,3],FrequencyTSex[1,3],FrequencyTAdult[2,3],FrequencyTWorkclass[2,3],FrequencyTEducation[10,3],FrequencyTNC[20,3])
+Pred1
+```
+There is a 63.77 percent chance that a person that is a white female adult working for the federal govt. who graduated from a bachelors from india, has less than or equal to 50K of income a year.
+
+```{r Problem 1 Question 5 part 1 Josiah}
+#Each fold end is calculated
+Income<-Income[-32561,] #This will ensure equality so one row is omitted
+Income2<-as.data.frame(Income[,c(15,9,10,16,2,4,14)])#new version of income removing the other columns not necessary
+Income2$income<-ifelse(as.character(Income2$income)==as.character(" <=50K"),1,0)
+TRows<-round(nrow(Income2))
+Onefold<- round(TRows/10) #This is the total rows of test data
+TrainTotal<- TRows-Onefold #This is the total rows of the training data
+Twofold <- Onefold*2 #Twofold and up is actually not needed - but I will keep them for checking reasons to see if endpoints match per fold
+Threefold <- Onefold*3
+Fourfold <- Onefold*4
+Fivefold <- Onefold*5
+Sixfold <- Onefold*6
+Sevenfold <- Onefold*7
+Eightfold <- Onefold*8
+Ninefold <- Onefold*9
+Tenfold <- Onefold*10
+#Each actual fold in the actual whole data is calculated (Test sets)
+OneFI<-Income2[1:Onefold,]
+TwoFI<-Income2[Onefold+1:Onefold,]#This indexing is apparently additive so this works
+ThreeFI<-Income2[Twofold+1:Onefold,]
+FourFI<-Income2[Threefold+1:Onefold,]
+FiveFI<-Income2[Fourfold+1:Onefold,]
+SixFI<-Income2[Fivefold+1:Onefold,]
+SevenFI<-Income2[Sixfold+1:Onefold,]
+EightFI<-Income2[Sevenfold+1:Onefold,]
+NineFI<-Income2[Eightfold+1:Onefold,]
+TenFI<-Income2[Ninefold+1:Onefold,]
+#Training sets
+OneOff<-1:Onefold 
+OneTrain<-Income2[-OneOff,]
+TwoOff<-Onefold+1:Onefold #This also has the same behavior
+TwoTrain<-Income2[-TwoOff,]
+ThreeOff<-Twofold+1:Onefold
+ThreeTrain<-Income2[-ThreeOff,]
+FourOff<-Threefold+1:Onefold
+FourTrain<-Income2[-FourOff,]
+FiveOff<-Fourfold+1:Onefold
+FiveTrain<-Income2[-FiveOff,]
+SixOff<-Fivefold+1:Onefold
+SixTrain<-Income2[-SixOff,]
+SevenOff<-Sixfold+1:Onefold
+SevenTrain<-Income2[-SevenOff,]
+EightOff<-Sevenfold+1:Onefold
+EightTrain<-Income2[-EightOff,]
+NineOff<-Eightfold+1:Onefold
+NineTrain<-Income2[-NineOff,]
+TenOff<-Ninefold+1:Onefold
+TenTrain<-Income2[-TenOff,]
+```
+
+```{r Problem 1 Question 5 part 2 Josiah}
+#These functions are to check for probabilities in likelihood table based on the factor <=50K
+
+Income2<-data.frame(Income[,c(15,9,10,16,2,4,14)])
+
+
+FindProbIncome<-function(x){
+  FindProbIncome<-ifelse(x==1,FrequencyTIncome[1,3],FrequencyTIncomeA[1,3])
+}
+
+t1<-FindProbIncome(0)
+
+FindProbRace<-function(x){
+  FindProbRace<-ifelse(as.character(x)==as.character(" Amer-Indian-Eskimo"),FrequencyTRace[1,3],
+                       ifelse(as.character(x)==as.character(" Asian-Pac-Islander"),FrequencyTRace[2,3],
+                              ifelse(as.character(x)==as.character(" Black"),FrequencyTRace[3,3],
+                                     ifelse(as.character(x)==as.character(" Other"),FrequencyTRace[4,3],FrequencyTRace[5,3]))))
+}
+
+t2A<-FindProbRace(" Black")
+t2B<-FindProbRace(" White")
+
+FindProbSex<-function(x){
+  ifelse(as.character(x)==as.character(" Female"),FrequencyTSex[1,3],FrequencyTSex[2,3])
+}
+
+t3<-FindProbSex(as.character("Female"))
+
+FindProbAdult<-function(x){
+  ifelse(x==0,FrequencyTAdult[1,3],FrequencyTAdult[2,3])
+}
+
+t4<-FindProbAdult(0)
+
+FindProbWorkClass<-function(x){
+  ifelse(as.character(x)==as.character("?"),FrequencyTWorkclass[1,3],
+         ifelse(as.character(x)==as.character(" Federal-gov"),FrequencyTWorkclass[2,3],
+                ifelse(as.character(x)==as.character(" Local-gov"),FrequencyTWorkclass[3,3],
+                       ifelse(as.character(x)==as.character(" Never-worked"),FrequencyTWorkclass[4,3],
+                              ifelse(as.character(x)==as.character(" Private"),FrequencyTWorkclass[5,3],
+                                     ifelse(as.character(x)==as.character(" Self-emp-inc"),FrequencyTWorkclass[6,3],
+                                            ifelse(as.character(x)==as.character(" Self-emp-not-inc"),FrequencyTWorkclass[7,3],
+                                                   ifelse(as.character(x)==as.character(" State-gov"),FrequencyTWorkclass[8,3],FrequencyTWorkclass[9,3]
+                                                          ))))))))
+}
+
+t5<-FindProbWorkClass(as.character(" Self-emp-not-inc"))
+
+FindProbEducation<-function(x){
+ ifelse(as.character(x)==as.character(" 10th"),FrequencyTEducation[1,3],
+         ifelse(as.character(x)==as.character(" 11th"),FrequencyTEducation[2,3],
+                ifelse(as.character(x)==as.character(" 12th"),FrequencyTEducation[3,3],
+                       ifelse(as.character(x)==as.character(" 1st-4th"),FrequencyTEducation[4,3],
+                              ifelse(as.character(x)==as.character(" 5th-6th"),FrequencyTEducation[5,3],
+                                     ifelse(as.character(x)==as.character(" 7th-8th"),FrequencyTEducation[6,3],
+                                            ifelse(as.character(x)==as.character(" 9th"),FrequencyTEducation[7,3],
+                                                   ifelse(as.character(x)==as.character(" Assoc-acdm"),FrequencyTEducation[8,3],
+                                                          ifelse(as.character(x)==as.character(" Assoc-voc"),FrequencyTEducation[9,3],
+         ifelse(as.character(x)==as.character(" Bachelors"),FrequencyTEducation[10,3],
+                ifelse(as.character(x)==as.character(" Doctorate"),FrequencyTEducation[11,3],
+                       ifelse(as.character(x)==as.character(" HS-grad"),FrequencyTEducation[12,3],
+                              ifelse(as.character(x)==as.character(" Masters"),FrequencyTEducation[13,3],
+                                     ifelse(as.character(x)==as.character(" Preschool"),FrequencyTEducation[14,3],
+                                            ifelse(as.character(x)==as.character(" Prof-school"),FrequencyTEducation[15,3], FrequencyTEducation[16,3])))))))))))))))
+}
+
+t6A<-FindProbEducation(" 5th-6th")
+
+t6B<-FindProbEducation(" Masters")
+
+FindProbNative<-function(x){
+ ifelse(as.character(x)==as.character(" ?"),FrequencyTNC[1,3],
+         ifelse(as.character(x)==as.character(" Cambodia"),FrequencyTNC[2,3],
+                ifelse(as.character(x)==as.character(" Canada"),FrequencyTNC[3,3],
+                       ifelse(as.character(x)==as.character(" China"),FrequencyTNC[4,3],
+                              ifelse(as.character(x)==as.character(" Columbia"),FrequencyTNC[5,3],
+                                     ifelse(as.character(x)==as.character(" Cuba"),FrequencyTNC[6,3],
+                                            ifelse(as.character(x)==as.character(" Dominican-Republic"),FrequencyTNC[7,3],
+                                                   ifelse(as.character(x)==as.character(" Ecuador"),FrequencyTNC[8,3],
+                                                          ifelse(as.character(x)==as.character(" El-Salvador"),FrequencyTNC[9,3],
+         ifelse(as.character(x)==as.character(" England"),FrequencyTNC[10,3],
+                ifelse(as.character(x)==as.character(" France"),FrequencyTNC[11,3],
+                       ifelse(as.character(x)==as.character(" Germany"),FrequencyTNC[12,3],
+                              ifelse(as.character(x)==as.character(" Greece"),FrequencyTNC[13,3],
+                                     ifelse(as.character(x)==as.character(" Guatemala"),FrequencyTNC[14,3],
+                                            ifelse(as.character(x)==as.character(" Haiti"),FrequencyTNC[15,3], ifelse(as.character(x)==as.character(" Holand-Netherlands"),FrequencyTNC[16,3],
+         ifelse(as.character(x)==as.character(" Honduras"),FrequencyTNC[17,3],
+                ifelse(as.character(x)==as.character(" Hong"),FrequencyTNC[18,3],
+                       ifelse(as.character(x)==as.character(" Hungary"),FrequencyTNC[19,3],
+                              ifelse(as.character(x)==as.character(" India"),FrequencyTNC[20,3],
+                                     ifelse(as.character(x)==as.character(" Iran"),FrequencyTNC[21,3],
+                                            ifelse(as.character(x)==as.character(" Ireland"),FrequencyTNC[22,3],
+                                                   ifelse(as.character(x)==as.character(" Italy"),FrequencyTNC[23,3],
+                                                          ifelse(as.character(x)==as.character(" Jamaica"),FrequencyTNC[24,3],
+         ifelse(as.character(x)==as.character(" Japan"),FrequencyTNC[25,3],
+                ifelse(as.character(x)==as.character(" Laos"),FrequencyTNC[26,3],
+                       ifelse(as.character(x)==as.character(" Mexico"),FrequencyTNC[27,3],
+                              ifelse(as.character(x)==as.character(" Nicaragua"),FrequencyTNC[28,3],
+                                     ifelse(as.character(x)==as.character(" Outlying-US(Guam-USVI-etc)"),FrequencyTNC[29,3],
+                                            ifelse(as.character(x)==as.character(" Peru"),FrequencyTNC[30,3], ifelse(as.character(x)==as.character(" Philippines"),FrequencyTNC[31,3],
+         ifelse(as.character(x)==as.character(" Poland"),FrequencyTNC[32,3],
+                ifelse(as.character(x)==as.character(" Portugal"),FrequencyTNC[33,3],
+                       ifelse(as.character(x)==as.character(" Puerto-Rico"),FrequencyTNC[34,3],
+                              ifelse(as.character(x)==as.character(" Scotland"),FrequencyTNC[35,3],
+                                     ifelse(as.character(x)==as.character(" South"),FrequencyTNC[36,3],
+                                            ifelse(as.character(x)==as.character(" Taiwan"),FrequencyTNC[37,3],
+                                                   ifelse(as.character(x)==as.character(" Thailand"),FrequencyTNC[38,3],
+                                                          ifelse(as.character(x)==as.character(" Trinadad&Tobago"),FrequencyTNC[39,3],
+         ifelse(as.character(x)==as.character(" United-States"),FrequencyTNC[40,3],
+                ifelse(as.character(x)==as.character(" Vietnam"),FrequencyTNC[41,3],FrequencyTNC[42,3]
+                              )))))))))))))))))))))))))))))))))))))))))
+ 
+}
+
+
+t7A<-FindProbNative(" China")
+t7B<-FindProbNative(" Greece")
+t7C<-FindProbNative(" India")
+t7D<-FindProbNative(" Outlying-US(Guam-USVI-etc)")
+t7E<-FindProbNative(" Philippines")
+t7F<-FindProbNative(" Yugoslavia")
+```
+
+```{r Problem 1 Question 5 part 3 Josiah}
+#These functions are to check for probabilities in likelihood table based on the factor >50K
+
+FindProbIncomeOther<-function(x){
+  FindProbIncomeOther<-ifelse(x==1,FrequencyTIncomeA[1,3],FrequencyTIncome[1,3])
+}
+
+#EDUCATION AND WORKCLASS AND NCA HAVE LAPLACE ISSUES
+
+FindProbRaceOther<-function(x){
+  
+  FindProbRaceOther<-ifelse(as.character(x)==as.character(" Amer-Indian-Eskimo"),FrequencyTRaceA[1,3],
+                       ifelse(as.character(x)==as.character(" Asian-Pac-Islander"),FrequencyTRaceA[2,3],
+                              ifelse(as.character(x)==as.character(" Black"),FrequencyTRaceA[3,3],
+                                     ifelse(as.character(x)==as.character(" Other"),FrequencyTRaceA[4,3],FrequencyTRaceA[5,3]))))
+  #Error prone area due to very likely low count - applying "laplace"
+}
+
+t2A<-FindProbRaceOther(" Black")
+t2B<-FindProbRaceOther(" White")
+
+FindProbSexOther<-function(x){
+  ifelse(as.character(x)==as.character(" Female"),FrequencyTSexA[1,3],FrequencyTSexA[2,3])
+  #Error prone area due to very likely low count - applying "laplace"
+}
+
+t3<-FindProbSexOther(as.character(" Female"))
+
+FindProbAdultOther<-function(x){
+  ifelse(x==0,FrequencyTAdultA[1,3],1)#Error prone area due to very likely low count - applying "laplace"
+}
+
+t4<-FindProbAdultOther(0)
+
+FindProbWorkClassOther<-function(x){
+  ifelse(as.character(x)==as.character(" ?"),FrequencyTWorkclassA[1,3],
+         ifelse(as.character(x)==as.character(" Federal-gov"),FrequencyTWorkclassA[2,3],
+                ifelse(as.character(x)==as.character(" Local-gov"),FrequencyTWorkclassA[3,3],
+                       ifelse(as.character(x)==as.character(" Never-worked"),FrequencyTWorkclassA[4,3],
+                              ifelse(as.character(x)==as.character(" Private"),FrequencyTWorkclassA[5,3],
+                                     ifelse(as.character(x)==as.character(" Self-emp-inc"),FrequencyTWorkclassA[6,3],
+                                            ifelse(as.character(x)==as.character(" Self-emp-not-inc"),FrequencyTWorkclassA[7,3],
+                                                   ifelse(as.character(x)==as.character(" State-gov"),FrequencyTWorkclassA[8,3],FrequencyTWorkclassA[9,3]))))))))
+}
+
+t5<-FindProbWorkClassOther(as.character(" Self-emp-not-inc"))
+
+FindProbEducationOther<-function(x){
+ #for(l in 1:16)
+    #for(t in 1:7)
+  #  {
+  #    ifelse(x[l,1]!= FrequencyTEducation[l,1], x[l,]<-c(FrequencyTEducation[l,1],x[l,2]<-as.vector(1)), x[l,2]<-as.vector(x[l,2]))
+  #  }
+  
+ ifelse(as.character(x)==as.character(" 10th"),FrequencyTEducationA[1,3],
+         ifelse(as.character(x)==as.character(" 11th"),FrequencyTEducationA[2,3],
+                ifelse(as.character(x)==as.character(" 12th"),FrequencyTEducationA[3,3],
+                       ifelse(as.character(x)==as.character(" 1st-4th"),FrequencyTEducationA[4,3],
+                              ifelse(as.character(x)==as.character(" 5th-6th"),FrequencyTEducationA[5,3],
+                                     ifelse(as.character(x)==as.character(" 7th-8th"),FrequencyTEducationA[6,3],
+                                            ifelse(as.character(x)==as.character(" 9th"),FrequencyTEducationA[7,3],
+                                                   ifelse(as.character(x)==as.character(" Assoc-acdm"),FrequencyTEducationA[8,3],
+                                                          ifelse(as.character(x)==as.character(" Assoc-voc"),FrequencyTEducationA[9,3],
+         ifelse(as.character(x)==as.character(" Bachelors"),FrequencyTEducationA[10,3],
+                ifelse(as.character(x)==as.character(" Doctorate"),FrequencyTEducationA[11,3],
+                       ifelse(as.character(x)==as.character(" HS-grad"),FrequencyTEducationA[12,3],
+                              ifelse(as.character(x)==as.character(" Masters"),FrequencyTEducationA[13,3],
+                                     ifelse(as.character(x)==as.character(" Preschool"),FrequencyTEducationA[14,3],
+                                            ifelse(as.character(x)==as.character(" Prof-school"),FrequencyTEducationA[15,3],FrequencyTEducationA[16,3]))))))))))))))) 
+  
+  
+}
+
+t6A<-FindProbEducationOther(" 5th-6th")
+
+t6B<-FindProbEducationOther(" Masters")
+
+FindProbNativeOther<-function(x){
+ ifelse(as.character(x)==as.character(" ?"),FrequencyTNCA[1,3],
+         ifelse(as.character(x)==as.character(" Cambodia"),FrequencyTNCA[2,3],
+                ifelse(as.character(x)==as.character(" Canada"),FrequencyTNCA[3,3],
+                       ifelse(as.character(x)==as.character(" China"),FrequencyTNCA[4,3],
+                              ifelse(as.character(x)==as.character(" Columbia"),FrequencyTNCA[5,3],
+                                     ifelse(as.character(x)==as.character(" Cuba"),FrequencyTNCA[6,3],
+                                            ifelse(as.character(x)==as.character(" Dominican-Republic"),FrequencyTNCA[7,3],
+                                                   ifelse(as.character(x)==as.character(" Ecuador"),FrequencyTNCA[8,3],
+                                                          ifelse(as.character(x)==as.character(" El-Salvador"),FrequencyTNCA[9,3],
+         ifelse(as.character(x)==as.character(" England"),FrequencyTNCA[10,3],
+                ifelse(as.character(x)==as.character(" France"),FrequencyTNCA[11,3],
+                       ifelse(as.character(x)==as.character(" Germany"),FrequencyTNCA[12,3],
+                              ifelse(as.character(x)==as.character(" Greece"),FrequencyTNCA[13,3],
+                                     ifelse(as.character(x)==as.character(" Guatemala"),FrequencyTNCA[14,3],
+                                            ifelse(as.character(x)==as.character(" Haiti"),FrequencyTNCA[15,3], ifelse(as.character(x)==as.character(" Holand-Netherlands"),FrequencyTNCA[16,3],
+         ifelse(as.character(x)==as.character(" Honduras"),FrequencyTNCA[17,3],
+                ifelse(as.character(x)==as.character(" Hong"),FrequencyTNCA[18,3],
+                       ifelse(as.character(x)==as.character(" Hungary"),FrequencyTNCA[19,3],
+                              ifelse(as.character(x)==as.character(" India"),FrequencyTNCA[20,3],
+                                     ifelse(as.character(x)==as.character(" Iran"),FrequencyTNCA[21,3],
+                                            ifelse(as.character(x)==as.character(" Ireland"),FrequencyTNCA[22,3],
+                                                   ifelse(as.character(x)==as.character(" Italy"),FrequencyTNCA[23,3],
+                                                          ifelse(as.character(x)==as.character(" Jamaica"),FrequencyTNCA[24,3],
+         ifelse(as.character(x)==as.character(" Japan"),FrequencyTNCA[25,3],
+                ifelse(as.character(x)==as.character(" Laos"),FrequencyTNCA[26,3],
+                       ifelse(as.character(x)==as.character(" Mexico"),FrequencyTNCA[27,3],
+                              ifelse(as.character(x)==as.character(" Nicaragua"),FrequencyTNCA[28,3],
+                                     ifelse(as.character(x)==as.character(" Outlying-US(Guam-USVI-etc)"),FrequencyTNCA[29,3],
+                                            ifelse(as.character(x)==as.character(" Peru"),FrequencyTNCA[30,3], ifelse(as.character(x)==as.character(" Philippines"),FrequencyTNCA[31,3],
+         ifelse(as.character(x)==as.character(" Poland"),FrequencyTNCA[32,3],
+                ifelse(as.character(x)==as.character(" Portugal"),FrequencyTNCA[33,3],
+                       ifelse(as.character(x)==as.character(" Puerto-Rico"),FrequencyTNCA[34,3],
+                              ifelse(as.character(x)==as.character(" Scotland"),FrequencyTNCA[35,3],
+                                     ifelse(as.character(x)==as.character(" South"),FrequencyTNCA[36,3],
+                                            ifelse(as.character(x)==as.character(" Taiwan"),FrequencyTNCA[37,3],
+                                                   ifelse(as.character(x)==as.character(" Thailand"),FrequencyTNCA[38,3],
+                                                          ifelse(as.character(x)==as.character(" Trinadad&Tobago"),FrequencyTNCA[39,3],
+         ifelse(as.character(x)==as.character(" United-States"),FrequencyTNCA[40,3],
+                ifelse(as.character(x)==as.character(" Vietnam"),FrequencyTNCA[41,3],FrequencyTNCA[42,3]
+                              ))))))))))))))))))))))))))))))))))))))))) 
+ 
+}
+```
+
+```{r Problem 1 Question 5 part 4 Josiah}
+#Newly modified custom Naive bays to take in dataframe variables with probabilities for current and alternate likelihoods calculated
+NBCMod<-function(x,r,s,a,w,e,nc){
+  A=FindProbIncome(x)*FindProbRace(r)*FindProbSex(s)*FindProbAdult(a)*FindProbWorkClass(w)*FindProbEducation(e)*FindProbNative(nc)
+  B=FindProbIncomeOther(x)*FindProbRaceOther(r)*FindProbSexOther(s)*FindProbAdultOther(a)*FindProbWorkClassOther(w)*FindProbEducationOther(e)*FindProbNativeOther(nc)
+  NBCMod<-(A/((A)+(B)))
+}
+
+TF<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India") #It works exactly the same as before thereby this modded version works.
+```
+
+```{r Problem 1 Question 5 part 5 ONEFOLD Josiah}
+#Onefold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;#TestSplitter[,1:7]<-NA; is the parts we will eventually use
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(OneTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(OneTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(OneTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+NBCMod<-function(x,r,s,a,w,e,nc){
+  A=FindProbIncome(x)*FindProbRace(r)*FindProbSex(s)*FindProbAdult(a)*FindProbWorkClass(w)*FindProbEducation(e)*FindProbNative(nc)
+  B=FindProbIncomeOther(x)*FindProbRaceOther(r)*FindProbSexOther(s)*FindProbAdultOther(a)*FindProbWorkClassOther(w)*FindProbEducationOther(e)*FindProbNativeOther(nc)
+  NBCMod<-(A/((A)+(B)))
+}
+
+#TF<-NBCMod(1,"White","Female",1,"Federal-gov","Bachelors","India") #It works exactly the same as before thereby this modded version works.
+
+Prob1f<-0 #probability collection
+Prob1f<-as.data.frame(Prob1f)
+Prob1f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestNC<-nrow(FrequencyTNC)
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestNC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:TestNC,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[TestNC,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[TestNC,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+OneTrain[1,1]
+OneTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob1f[i,]<-NBCMod(OneTrain[i,1],OneTrain[i,2],OneTrain[i,3],OneTrain[i,4],OneTrain[i,5],OneTrain[i,6],OneTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 6 ONEFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred1<-as.data.frame(0)
+Pred1[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred1<-as.data.frame(MeanTrainer(Prob1f))
+summary(Pred1)
+Prediction1<-0
+Prediction1<-as.data.frame(ifelse(Pred1>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction1)
+Res1f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res1f[i]<-ifelse(Prediction1[i,1]==OneFI[i,1],1,0)
+}
+Accuracy1f<-mean(Res1f) #The accuracy of predicting a person in this FIRST fold is 67.35%!
+```
+
+```{r Problem 1 Question 5 part 7 TWOFOLD Josiah}
+#Twofold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(TwoTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(TwoTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(TwoTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+Prob2f<-0 #probability collection
+Prob2f<-as.data.frame(Prob2f)
+Prob2f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestNC<-nrow(FrequencyTNC)
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestNC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:TestNC,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[TestNC,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[TestNC,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+TwoTrain[1,1]
+TwoTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob2f[i,]<-NBCMod(TwoTrain[i,1],TwoTrain[i,2],TwoTrain[i,3],TwoTrain[i,4],TwoTrain[i,5],TwoTrain[i,6],TwoTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 8 TWOFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred2<-as.data.frame(0)
+Pred2[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred2<-as.data.frame(MeanTrainer(Prob2f))
+summary(Pred2)
+Prediction2<-0
+Prediction2<-as.data.frame(ifelse(Pred2>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction2)
+Res2f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res2f[i]<-ifelse(Prediction2[i,1]==TwoFI[i,1],1,0)
+}
+Accuracy2f<-mean(Res2f) #The accuracy of predicting a person in this FIRST fold is 66.83%!
+```
+
+```{r Problem 1 Question 5 part 9 THREEFOLD Josiah}
+#Threefold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(ThreeTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(ThreeTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(ThreeTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+Prob3f<-0 #probability collection
+Prob3f<-as.data.frame(Prob3f)
+Prob3f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestNC<-nrow(FrequencyTNC)
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestNC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:TestNC,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[TestNC,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[TestNC,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+ThreeTrain[1,1]
+ThreeTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob3f[i,]<-NBCMod(ThreeTrain[i,1],ThreeTrain[i,2],ThreeTrain[i,3],ThreeTrain[i,4],ThreeTrain[i,5],ThreeTrain[i,6],ThreeTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 10 THREEFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred3<-as.data.frame(0)
+Pred3[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred3<-as.data.frame(MeanTrainer(Prob3f))
+summary(Pred3)
+Prediction3<-0
+Prediction3<-as.data.frame(ifelse(Pred3>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction3)
+Res3f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res3f[i]<-ifelse(Prediction3[i,1]==ThreeFI[i,1],1,0)
+}
+Accuracy3f<-mean(Res3f) #The accuracy of predicting a person in this FIRST fold is 67.51%!
+#Replace XTrain XFI, ProbXf
+#REPLACE Pred2,Prediction2,Res2f,Accuracy2f
+```
+
+```{r Problem 1 Question 5 part 11 FOURFOLD Josiah}
+#Fourfold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(FourTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(FourTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(FourTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+Prob4f<-0 #probability collection
+Prob4f<-as.data.frame(Prob4f)
+Prob4f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestNC<-nrow(FrequencyTNC)
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestNC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:TestNC,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[TestNC,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[TestNC,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+FourTrain[1,1]
+FourTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob4f[i,]<-NBCMod(FourTrain[i,1],FourTrain[i,2],FourTrain[i,3],FourTrain[i,4],FourTrain[i,5],FourTrain[i,6],FourTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 12 FOURFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred4<-as.data.frame(0)
+Pred4[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred4<-as.data.frame(MeanTrainer(Prob4f))
+summary(Pred4)
+Prediction4<-0
+Prediction4<-as.data.frame(ifelse(Pred4>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction4)
+Res4f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res4f[i]<-ifelse(Prediction4[i,1]==FourFI[i,1],1,0)
+}
+Accuracy4f<-mean(Res4f) #The accuracy of predicting a person in this FIRST fold is 67.81%!
+#Replace XTrain XFI, ProbXf
+#REPLACE Pred2,Prediction2,Res2f,Accuracy2f
+```
+
+```{r Problem 1 Question 5 part 13 FIVEFOLD Josiah}
+#Fivefold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(FiveTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(FiveTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(FiveTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+Prob5f<-0 #probability collection
+Prob5f<-as.data.frame(Prob5f)
+Prob5f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestNC<-nrow(FrequencyTNC)
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestNC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:TestNC,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[TestNC,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[TestNC,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+FiveTrain[1,1]
+FiveTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob5f[i,]<-NBCMod(FiveTrain[i,1],FiveTrain[i,2],FiveTrain[i,3],FiveTrain[i,4],FiveTrain[i,5],FiveTrain[i,6],FiveTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 14 FIVEFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred5<-as.data.frame(0)
+Pred5[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred5<-as.data.frame(MeanTrainer(Prob5f))
+summary(Pred5)
+Prediction5<-0
+Prediction5<-as.data.frame(ifelse(Pred5>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction5)
+Res5f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res5f[i]<-ifelse(Prediction5[i,1]==FiveFI[i,1],1,0)
+}
+Accuracy5f<-mean(Res5f) #The accuracy of predicting a person in this FIRST fold is 67.11%!
+#Replace XTrain*12 XFI*1, ProbXf*6
+#REPLACE PredX*5,PredictionX*4,Res5f,Accuracy2f*1
+```
+
+```{r Problem 1 Question 5 part 15 SIXFOLD Josiah}
+#Sixfold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(SixTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(SixTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(SixTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+Prob6f<-0 #probability collection
+Prob6f<-as.data.frame(Prob6f)
+Prob6f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestNC<-nrow(FrequencyTNC)
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestNC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:TestNC,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[TestNC,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[TestNC,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+SixTrain[1,1]
+SixTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob6f[i,]<-NBCMod(SixTrain[i,1],SixTrain[i,2],SixTrain[i,3],SixTrain[i,4],SixTrain[i,5],SixTrain[i,6],SixTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 16 SIXFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred6<-as.data.frame(0)
+Pred6[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred6<-as.data.frame(MeanTrainer(Prob6f))
+summary(Pred6)
+Prediction6<-0
+Prediction6<-as.data.frame(ifelse(Pred6>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction6)
+Res6f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res6f[i]<-ifelse(Prediction6[i,1]==SixFI[i,1],1,0)
+}
+Accuracy6f<-mean(Res6f) #The accuracy of predicting a person in this FIRST fold is 67.54%!
+#Replace XTrain*12 XFI*1, ProbXf*6
+#REPLACE PredX*5,PredictionX*4,ResXf*3,Accuracy2f*1
+```
+
+```{r Problem 1 Question 5 part 17 SEVENFOLD Josiah}
+#Sevenfold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(SevenTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(SevenTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(SevenTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+Prob7f<-0 #probability collection
+Prob7f<-as.data.frame(Prob7f)
+Prob7f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestMODNC<-nrow(FrequencyTNCNAMES) #Special table to fit laplace due to unique issue with table size
+TestNC<-nrow(FrequencyTNC) 
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestMODNC) #LAPLACE FOR FrequencyTNC TABLE
+{
+  ifelse(as.vector(FrequencyTNCNAMES[i,1])!=as.vector(FrequencyTNC[i,1]), FrequencyTNC<-rbind(FrequencyTNC[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNC[i:TestMODNC,]),FrequencyTNC[i,])
+}
+NCRows<-nrow(FrequencyTNC) #Adds laplace estimator at the end just in case
+FrequencyTNC<-FrequencyTNC[-NCRows,] #removes extra row added
+ifelse(is.na(FrequencyTNC[TestNC,1])==TRUE,FrequencyTNC<-rbind(FrequencyTNC[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNC[TestNC,])
+
+for(i in 1:NCRows) #LAPLACE- fixed NC table
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:NCRows,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[NCRows,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:NCRows-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[NCRows,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+SevenTrain[1,1]
+SevenTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob7f[i,]<-NBCMod(SevenTrain[i,1],SevenTrain[i,2],SevenTrain[i,3],SevenTrain[i,4],SevenTrain[i,5],SevenTrain[i,6],SevenTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 18 SEVENFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred7<-as.data.frame(0)
+Pred7[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred7<-as.data.frame(MeanTrainer(Prob7f))
+Mean7<-colMeans(Pred7,na.rm = TRUE)
+typeof(Mean7)
+#for(i in 1:ValidationTrows)
+#{
+ #Pred7[i,1]<-ifelse(is.na(Pred7[i,1])==TRUE,Pred7[i,1]<-Mean7,Pred7[i,1]) #NAs have been found ~.008% negligable ~ 26 NAs - using meanimputation [CORRECTED THIS PART BY TABLE EDITS]
+#}
+summary(Pred7)
+Prediction7<-0
+Prediction7<-as.data.frame(ifelse(Pred7>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction7)
+Res7f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res7f[i]<-ifelse(Prediction7[i,1]==SevenFI[i,1],1,0)
+}
+Accuracy7f<-mean(Res7f) #The accuracy of predicting a person in this FIRST fold is 67.75%!
+#Replace XTrain*12 XFI*1, ProbXf*6 
+#REPLACE PredX*10,PredictionX*4,ResXf*3,Accuracy2f*1
+```
+
+```{r Problem 1 Question 5 part 19 EIGHTFOLD Josiah}
+#Eightfold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(EightTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(EightTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(EightTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+Prob8f<-0 #probability collection
+Prob8f<-as.data.frame(Prob8f)
+Prob8f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestNC<-nrow(FrequencyTNC)
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestNC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:TestNC,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[TestNC,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[TestNC,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+EightTrain[1,1]
+EightTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob8f[i,]<-NBCMod(EightTrain[i,1],EightTrain[i,2],EightTrain[i,3],EightTrain[i,4],EightTrain[i,5],EightTrain[i,6],EightTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 20 EIGHTFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred8<-as.data.frame(0)
+Pred8[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred8<-as.data.frame(MeanTrainer(Prob8f))
+Mean7<-colMeans(Pred8,na.rm = TRUE)
+typeof(Mean7)
+#for(i in 1:ValidationTrows)
+#{
+ #Pred8[i,1]<-ifelse(is.na(Pred8[i,1])==TRUE,Pred8[i,1]<-Mean7,Pred8[i,1]) #NO NAs found commenting out
+#}
+summary(Pred8)
+Prediction8<-0
+Prediction8<-as.data.frame(ifelse(Pred8>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction8)
+Res8f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res8f[i]<-ifelse(Prediction8[i,1]==EightFI[i,1],1,0)
+}
+Accuracy8f<-mean(Res8f) #The accuracy of predicting a person in this FIRST fold is 66.85%!
+#Replace XTrain*12 XFI*1, ProbXf*6 
+#REPLACE PredX*10,PredictionX*4,ResXf*3,AccuracyXf*1
+```
+
+```{r Problem 1 Question 5 part 21 NINEFOLD Josiah}
+#Ninefold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(NineTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(NineTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(NineTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+Prob9f<-0 #probability collection
+Prob9f<-as.data.frame(Prob9f)
+Prob9f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestNC<-nrow(FrequencyTNC)
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestNC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:TestNC,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[TestNC,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[TestNC,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+NineTrain[1,1]
+NineTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob9f[i,]<-NBCMod(NineTrain[i,1],NineTrain[i,2],NineTrain[i,3],NineTrain[i,4],NineTrain[i,5],NineTrain[i,6],NineTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 22 NINEFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred9<-as.data.frame(0)
+Pred9[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred9<-as.data.frame(MeanTrainer(Prob9f))
+Mean7<-colMeans(Pred9,na.rm = TRUE)
+typeof(Mean7)
+#for(i in 1:ValidationTrows)
+#{
+ #Pred9[i,1]<-ifelse(is.na(Pred9[i,1])==TRUE,Pred9[i,1]<-Mean7,Pred9[i,1]) #NO NAs found commenting out
+#}
+summary(Pred9)
+Prediction9<-0
+Prediction9<-as.data.frame(ifelse(Pred9>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction9)
+Res9f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res9f[i]<-ifelse(Prediction9[i,1]==NineFI[i,1],1,0)
+}
+Accuracy9f<-mean(Res9f) #The accuracy of predicting a person in this FIRST fold is 67.26%!
+#Replace XTrain*12 XFI*1, ProbXf*6 
+#REPLACE PredX*10,PredictionX*4,ResXf*3,AccuracyXf*1
+```
+
+```{r Problem 1 Question 5 part 23 TENFOLD Josiah}
+#Tenfold recycling vectors
+TestSplitter<-0
+TestSplitter<-as.data.frame(TestSplitter)
+TestSplitter[1:TrainTotal,]<-NA;
+TestSplitter[,1:7]<-NA;
+OtherTestSplitter<-0
+OtherTestSplitter<-as.data.frame(OtherTestSplitter)
+OtherTestSplitter[1:TrainTotal,]<-NA;
+OtherTestSplitter[,1:7]<-NA;
+colnames(TestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+colnames(OtherTestSplitter)<-c("income","race","sex","isAdult","workclass","education","native.country")
+TestSplitter$income<-as.character(TestSplitter$income)
+OtherTestSplitter$income<-as.character(OtherTestSplitter$income)
+
+
+for(i in 1:TrainTotal)
+{
+   for(a in 1:7) #REMINDER change to 1:7 in future tables
+     ifelse(TenTrain[i,1]==1, #splits into two tables for categorical probability calculation of <=50K and >50K
+     TestSplitter[i,a]<-as.vector(TenTrain[i,a]), #TestSplitter and OtherTestSplitter dataframes are kept to keep track of the splitting process
+     OtherTestSplitter[i,a]<-as.vector(TenTrain[i,a]))
+}
+Splitter<-TestSplitter[complete.cases(TestSplitter),]
+AltSplitter<-OtherTestSplitter[complete.cases(OtherTestSplitter),]
+
+Splitter$income<-as.factor(Splitter$income)#Remember to convert to integer to prevent boolean issues!
+AltSplitter$income<-as.factor(AltSplitter$income)#Remember to convert to integer to prevent boolean issues!
+
+OATot<-nrow(Income2)
+TotalInL<-nrow(Splitter)
+FrequencyTWorkclass<-as.data.frame(table(Splitter$workclass))
+FrequencyTWorkclass[,3]<-as.data.frame(FrequencyTWorkclass[,2]/TotalInL)
+FrequencyTEducation<-as.data.frame(table(Splitter$education))
+FrequencyTEducation[,3]<-as.data.frame(FrequencyTEducation[,2]/TotalInL)
+FrequencyTRace<-as.data.frame(table(Splitter$race))
+FrequencyTRace[,3]<-as.data.frame(FrequencyTRace[,2]/TotalInL)
+FrequencyTSex<-as.data.frame(table(Splitter$sex))
+FrequencyTSex[,3]<-as.data.frame(FrequencyTSex[,2]/TotalInL)
+FrequencyTNC<-as.data.frame(table(Splitter$native.country))
+FrequencyTNC[,3]<-as.data.frame(FrequencyTNC[,2]/TotalInL)
+FrequencyTIncome<-as.data.frame(table(Splitter$income))
+FrequencyTIncome[,3]<-as.data.frame(FrequencyTIncome[,2]/OATot)
+FrequencyTAdult<-as.data.frame(table(Splitter$isAdult))
+FrequencyTAdult[,3]<-as.data.frame(FrequencyTAdult[,2]/TotalInL)
+
+TotalInG<-nrow(AltSplitter)
+FrequencyTWorkclassA<-as.data.frame(table(AltSplitter$workclass))
+FrequencyTWorkclassA[,3]<-as.data.frame(FrequencyTWorkclassA[,2]/TotalInG)
+FrequencyTEducationA<-as.data.frame(table(AltSplitter$education))
+FrequencyTEducationA[,3]<-as.data.frame(FrequencyTEducationA[,2]/TotalInG)
+FrequencyTRaceA<-as.data.frame(table(AltSplitter$race))
+FrequencyTRaceA[,3]<-as.data.frame(FrequencyTRaceA[,2]/TotalInG)
+FrequencyTSexA<-as.data.frame(table(AltSplitter$sex))
+FrequencyTSexA[,3]<-as.data.frame(FrequencyTSexA[,2]/TotalInG)
+FrequencyTNCA<-as.data.frame(table(AltSplitter$native.country))
+FrequencyTNCA[,3]<-as.data.frame(FrequencyTNCA[,2]/TotalInG)
+FrequencyTIncomeA<-as.data.frame(table(AltSplitter$income))
+FrequencyTIncomeA[,3]<-as.data.frame(FrequencyTIncomeA[,2]/OATot) #Noticably only people who are adults have >50K income
+FrequencyTAdultA<-as.data.frame(table(AltSplitter$isAdult))
+FrequencyTAdultA[,3]<-as.data.frame(FrequencyTAdultA[,2]/TotalInG)
+
+Prob10f<-0 #probability collection
+Prob10f<-as.data.frame(Prob10f)
+Prob10f[1:TrainTotal,]<-NA;
+
+
+TestEd<-nrow(FrequencyTEducation)
+TestEdA<-nrow(FrequencyTEducationA)
+for(i in 1:TestEd) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTEducation[i,1])!=as.vector(FrequencyTEducationA[i,1]), FrequencyTEducationA<-rbind(FrequencyTEducationA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTEducationA[i:TestEd,]), 
+         FrequencyTEducationA[i,])
+}
+EducationARows<-nrow(FrequencyTEducationA) #Adds laplace estimator at the end just in case
+FrequencyTEducationA<-FrequencyTEducationA[-EducationARows,] #removes extra row added
+ifelse(is.na(FrequencyTEducationA[TestEd,1])==TRUE,FrequencyTEducationA<-rbind(FrequencyTEducationA[1:TestEd-1,],c(NA,1,1/TrainTotal)),FrequencyTEducationA[TestEd,])
+
+TestNC<-nrow(FrequencyTNC)
+TestNCA<-nrow(FrequencyTNCA)
+
+for(i in 1:TestNC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTNC[i,1])!=as.vector(FrequencyTNCA[i,1]), FrequencyTNCA<-rbind(FrequencyTNCA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTNCA[i:TestNC,]),FrequencyTNCA[i,])
+}
+NCARows<-nrow(FrequencyTNCA) #Adds laplace estimator at the end just in case
+FrequencyTNCA<-FrequencyTNCA[-NCARows,] #removes extra row added
+ifelse(is.na(FrequencyTNCA[TestNC,1])==TRUE,FrequencyTNCA<-rbind(FrequencyTNCA[1:TestNC-1,],c(NA,1,1/TrainTotal)),FrequencyTNCA[TestNC,])
+
+TestWC<-nrow(FrequencyTWorkclass)
+TestWCA<-nrow(FrequencyTWorkclassA)
+
+for(i in 1:TestWC) #LAPLACE
+{
+  ifelse(as.vector(FrequencyTWorkclass[i,1])!=as.vector(FrequencyTWorkclassA[i,1]), FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:i-1,],c(NA,1,1/TrainTotal),FrequencyTWorkclassA[i:TestWC,]), 
+         FrequencyTWorkclassA[i,])
+}
+WorkARows<-nrow(FrequencyTWorkclassA) #Adds laplace estimator at the end just in case
+FrequencyTWorkclassA<-FrequencyTWorkclassA[-WorkARows,] #removes extra row added
+ifelse(is.na(FrequencyTWorkclassA[TestWC,1])==TRUE,FrequencyTWorkclassA<-rbind(FrequencyTWorkclassA[1:TestWC-1,],c(NA,1,1/TrainTotal)),FrequencyTWorkclassA[TestWC,])
+
+TestProb<-NBCMod(1," White"," Female",1," Federal-gov"," Bachelors"," India")
+TenTrain[1,1]
+TenTrain[1,3]
+for(i in 1:TrainTotal)
+{
+    Prob10f[i,]<-NBCMod(TenTrain[i,1],TenTrain[i,2],TenTrain[i,3],TenTrain[i,4],TenTrain[i,5],TenTrain[i,6],TenTrain[i,7])
+}
+```
+
+```{r Problem 1 Question 5 part 24 TENFOLD Josiah}
+#This takes the means of the training data (of 9 rows EACH from 29304 rows) to accurately predict the test data (for 1 row of 3256 rows)
+Trainerrows<-round(TrainTotal/Onefold)
+ValidationTrows<-TrainTotal/Trainerrows
+Pred10<-as.data.frame(0)
+Pred10[1:ValidationTrows,]<-NA #This stores the predictions
+MeanTrainer<-function(probs){
+  predstack<-0;
+  for(s in seq(9,TrainTotal,9)) #Goes through a sequence of 9 to fit into the testing data
+  {
+    predstack[s/9]<-(probs[s-8,1]+probs[s-7,1]+probs[s-6,1]+probs[s-5,1]+probs[s-4,1]+probs[s-3,1]+probs[s-2,1]+probs[s-1,1]+probs[s,1])/9
+  }
+  MeanTrainer<-predstack
+}
+Pred10<-as.data.frame(MeanTrainer(Prob10f))
+Mean7<-colMeans(Pred10,na.rm = TRUE)
+typeof(Mean7)
+#for(i in 1:ValidationTrows)
+#{
+ #Pred10[i,1]<-ifelse(is.na(Pred10[i,1])==TRUE,Pred10[i,1]<-Mean7,Pred10[i,1]) #NO NAs found commenting out
+#}
+summary(Pred10)
+Prediction10<-0
+Prediction10<-as.data.frame(ifelse(Pred10>.5,1,0))#threshold to assume prediction that a person has <=50K income a year is at 50 percent.
+summary(Prediction10)
+Res10f<-0 #measure accuracy
+for(i in 1:ValidationTrows)
+{
+  Res10f[i]<-ifelse(Prediction10[i,1]==TenFI[i,1],1,0)
+}
+Accuracy10f<-mean(Res10f) #The accuracy of predicting a person in this FIRST fold is 67.54%!
+#Replace XTrain*12 XFI*1, ProbXf*6 
+#REPLACE PredX*10,PredictionX*4,ResXf*3,AccuracyXf*1
+```
+
+```{r Problem 1 Question 5 part 25 CROSS-VALIDATION Josiah}
+NBCV10F<-(Accuracy1f+Accuracy2f+Accuracy3f+Accuracy4f+Accuracy5f+Accuracy6f+Accuracy7f+Accuracy8f+Accuracy9f+Accuracy10f)/10
+```
+
+The model made has a likelihood of 67.36 percent. Optimistically it is fairly better than a random guess at best.

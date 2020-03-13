@@ -1,0 +1,139 @@
+---
+title: "R Notebook"
+name: Varun Sriram
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+class: DA 5030, Assignment 3
+---
+
+
+```{r, Question 1}
+# 1, 2 already done
+```
+
+```{r, Question 2}
+#Queston 3
+
+#Read the data from a cvs file, and convert every character vector to a factor wherever possible
+cancer <- read.csv("prostate_cancer.csv", stringsAsFactors = FALSE)
+
+#check if the data is properly imported and structured or not
+str(cancer)
+head(cancer)
+
+#remove ID because it is an extra column to the data frame and is redundant
+cancer <- cancer[-1]
+
+#check if the ID column is removed
+head(cancer)
+
+#Get the number of patients in table
+table(cancer$diagnosis_result)
+
+
+#Rename B to benign and M to malignant in the column diagnosis
+cancer$diagnosis <- factor(cancer$diagnosis_result, levels = c("B", "M"), labels = c("Benign", "Malignant"))
+
+#Gives the result of B/ to all cases in percentage form rounded of to 1 decimal place
+round(prop.table(table(cancer$diagnosis)) * 100, digits=1)
+
+#Normalizing is the process of bringing all values to a common scale. It's vital because the presence of values in various scales can hinder the process of kNN or data analysis in general and might yield wrong results
+#Here we create a normalize funtion
+normalize <- function(x)
+{
+  return((x-min(x))/(max(x)-min(x)))
+}
+
+
+#Getting a normailized data frame by passing cancer(data frame) values to the normalize function written above
+cancer_normalized <- as.data.frame(lapply(cancer[2:9], normalize))
+
+#check if the function is normalized
+summary(cancer_normalized)
+
+#Creating to data sets, one for training and other for testing. I chose 50-50 rows for each set for consistency
+cancer_training <- cancer_normalized[1:50,]
+cancer_test <- cancer_normalized[51:100,]
+
+#Target variable which has not been included in our training and test data will be included
+cancer_training_labels <- cancer[1:50,1]
+cancer_test_labels <- cancer[51:100,1]
+
+#kNN is part of package "class"
+library(class)
+
+#using kNN() function to classify test data for various values of k
+cancer_test_prediction <- knn(train = cancer_training, test=cancer_test, cl=cancer_test_labels, k=10)
+cancer_test_prediction2 <- knn(train = cancer_training, test=cancer_test, cl=cancer_test_labels, k=9)
+cancer_test_prediction3 <- knn(train = cancer_training, test=cancer_test, cl=cancer_test_labels, k=8)
+cancer_test_prediction4 <- knn(train = cancer_training, test=cancer_test, cl=cancer_test_labels, k=7)
+
+#The cross table shows the accuracy of all models (4 here).
+library(gmodels)
+CrossTable(x=cancer_test_labels, y =cancer_test_prediction, prop.chisq=FALSE)
+CrossTable(x=cancer_test_labels, y =cancer_test_prediction2, prop.chisq=FALSE)
+CrossTable(x=cancer_test_labels, y =cancer_test_prediction3, prop.chisq=FALSE)
+CrossTable(x=cancer_test_labels, y =cancer_test_prediction4, prop.chisq=FALSE)
+
+
+#We can conclude that k=7(cancer_test_prediction4) has the best accuracy.
+```
+```{r, Question 3}
+#Question 4 
+
+#importing library caret
+library(caret)
+library(ggplot2)
+library(lattice)
+#Splitting data into training and test
+#Using the matrix from the previous question
+#using a seed with hard coded value to maintain consistency throughout the kNN process for multiple runs 
+set.seed(2018)
+
+#createDatapartition takes vector value, which takes 0.5 "50%" of the data rows and stores in index
+index <- createDataPartition(y=cancer$diagnosis_result, p=0.5,list=FALSE)
+
+#create training set using index
+caret_training <- cancer[index,]
+
+#create test data set using -index = other rows excluding index rows
+caret_test <- cancer[-index,]
+
+#dim(caret_test);dim(caret_training);
+#caret_test
+
+#The original dataset has 2 values, Benign and Malignant, they should be considered categorical variables.To convert these to categorical variables, we can convert them to factors.
+caret_training[["diagnosis"]]=factor(caret_training[["diagnosis"]])
+
+
+#Caret package provides train() function for training the data . Before the train() function is used, we implement trainControl() method first as it controls the computational nuances of the train() method.
+
+#Below: The process of splitting the data into k-folds can be repeated a number of times, this is called Repeated k-fold Cross Validation. The final model accuracy is taken as the mean from the number of repeats. I feel that an iterative approach to find k is the best solution since kNN is simple and finding the right k requires trial and error.
+
+training_control <- trainControl(method = "repeatedcv", number=10, repeats = 3)
+
+set.seed(2017)
+
+#Doing the kNN process here, prepocessing the data in this scnario: "center"" sets mean value as 1 and "scale" sets Standard deviation to 1 . Tuning holds an integer value which checks the number of different k values to check.
+knn_caret <- train(diagnosis ~.,data=caret_training,method="knn",trControl=training_control,preProcess=c("center","scale"),tuneLength=10 )
+
+knn_caret
+
+caret_test_pred <- predict(knn_caret, newdata = caret_test)
+caret_test_pred
+
+#Checking the accuracy of k in both versions, caret package has an accuracy of 0.97 to 0.84(in the previous ques) when k=7 and the former has a better accuracy overall.
+
+```
+
+```{r, Question 6}
+#Question 6
+
+confusionMatrix(caret_test_pred, caret_test$diagnosis)
+
+#using the confusion matrix, our model is at an accuracy of 96%.
+
+```

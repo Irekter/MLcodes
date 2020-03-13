@@ -1,0 +1,194 @@
+---
+title: "R Notebook"
+name: Varun Sriram
+output:
+  html_document:
+    df_print: paged
+assignment: DA5030 Assignment 5
+---
+
+```{r, Question 1}
+
+#Question 1
+
+
+credit <- read.csv("credit.csv")
+
+#Display some data to get the hang of it
+str(credit) 
+
+#Output for checkings and savings balance. The values are recorded as categorical variables
+table(credit$checking_balance)
+table(credit$savings_balance)
+
+#loan features aree numeric like duration and amount
+summary(credit$months_loan_duration)
+summary(credit$amount)
+
+#Default = applicant wasn't able to reach the requirements. Checking the percent that were defaulters.
+table(credit$default)
+
+#Create data set with 90% rows, randomized
+set.seed(99)
+train_sample <- sample(1000,900)
+
+
+#Creating training and testing data set
+credit_train <- credit[train_sample,]
+credit_test <- credit[-train_sample,]
+
+prop.table(table(credit_train$default))
+prop.table(table(credit_test$default))
+
+#install.packages("C50")
+library(C50)
+
+#Creating training model for C5.0
+credit_model <- C5.0(credit_train[-17], as.factor(credit_train$default))
+credit_model
+summary(credit_model)
+
+#evaluation model performance
+credit_pred <- predict(credit_model, credit_test)
+
+library(gmodels)
+CrossTable(credit_test$default, credit_pred,prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE, dnn = c('actual default', 'predicted default'))
+
+#Applying boosting to our model by adding trials
+credit_boost10 <- C5.0(credit_train[-17], as.factor(credit_train$default), trials = 10)
+credit_boost10
+
+summary(credit_boost10)
+credit_boost10_pred <- predict(credit_boost10,credit_test)
+CrossTable(credit_test$default, credit_boost10_pred, prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,dnn = c('actual default', 'predicted default'))
+
+#comment of the error rate!~!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+#Making cost matrix
+matrix_dim <- list(c("1", "2"), c("1", "2"))
+names(matrix_dim) <- c("predicted", "actual")
+
+error_cost <- matrix(c(0, 1, 4, 0), nrow = 2)
+
+error_cost
+
+credit_cost <-C5.0(credit_train[-17], as.factor(credit_train$default), costs = error_cost)
+credit_cost_pred <- predict(credit_cost, credit_test)
+CrossTable(credit_test$default, credit_cost_pred,prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,dnn = c('actual default', 'predicted default'))
+
+``` 
+
+```{r, Question 2}
+
+#Question 2
+
+
+mush <- read.csv("mushrooms.csv", stringsAsFactors = TRUE)
+
+str(mush)
+
+#veil_type has is a factor with only one level and it would be insignificant in this analysis. Also it will yield wrong and different results if used in analysis. So we remove it
+mush$veil_type <- NULL
+
+table(mush$type)
+
+
+library(RWeka)
+
+#Considering all possible features in mushroom data  and use it in our rule learner : Creating a tree and searching through it
+mush_1R <- OneR(type ~., data = mush)
+mush_1R
+
+
+summary(mush_1R)
+
+
+#Training thr J-RIPPER rule learner to choose rules from all available features : Using a created tree and searching through it by pruning unwanted conditions
+mush_JRip <- JRip(type~.,data = mush)
+
+#Getting the right rules and conditions from JRip()
+mush_JRip
+
+
+```
+
+```{r, Question 3}
+
+#Question 3
+
+
+#Here are some differences in the algorithms kNN, Naive Bayes, C 5.0 Decision Tree, RIPPER in point manner
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+
+#kNN:
+
+#Supervised Classifier
+#kNN is most likely to overfit, and hence adjusting 'k' to maximise test set performance
+#As the complexity of the space grows, the accuracy of K-NN comes down
+#Outliers can significantly kill the performance
+#Order of this classifier is n^2
+#Slower than Naive Bayes, c5.0 Decision trees, RIPPER
+
+#Used on smaller data sets and lesser columns
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Naive Bayes:
+
+#supervised learning & classifier
+#assumes conditional independence between the features and uses a maximum likelihood hypothesis
+#correlated attributes  can kill the algorithm
+#zero frequencies and make the algorithm useless
+#Order is n
+#Faster than kNN, slower than C5.0
+
+#Used on data with attributes independent from one another
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+
+#c5.0 decision tree:
+
+#Supervised Learning & classifier
+#Uses decision trees to classify data
+#Uses proportional logic
+#Makes use of entropy, which is amount of uncertainty in data set
+#Has a greedy approach
+#uses breadth first search in the decision tree to classify test cases
+#Since breadth first search has a complexity of n^2, C5.0 has complexity of n^2
+#More number of attributes in data set, more computation required
+#Faster than kNN, Naive Bayes, slower than Ripper
+
+#used on date sets with dependent variables and creates a tree to classify data
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Ripper:
+
+#Supervised Learning
+#Rules based learning
+#Makes rules from decision trees (C4.5 / C5.0)
+#Uses first order logic and not proportional logic
+#Adds one rule at a time to the rule base & then adds condition to the current rule
+#Order is n^2
+#Maximize information gain until covers no negative example.
+#Involves pruning (cutting down unwanted nodes which do not contribute towards the learning) which lessen the computation time
+#Faster than all the above 
+
+#uses a tree and reduces its size to classify data
+
+```
+
+
+```{r, Question 4}
+#Question 4
+
+
+
+#Model Ensembles vs "Classifying with 1 model" is an example of theory vs practical, where we hypothesize to obtain 100% prediction using 1 particular model. In reality, it is far fetched and impossible.Thus, we use Model ensembles to obtainmaximum accuracy. As mentioned, model ensembles is the process to generate set of models and make predictions independently and combine them into a single model.
+
+#Bagging : "Bagging predictors is a method for generating multiple versions of a predictor and using these to get an aggregated predictor." What baggingdoes is to help reduce variance from models which are too accurate, but only on the training data. This helps reduce overfitting.
+
+#Boosting : When boosting runs each model, it tracks which data samples are the most successful and which are not. The data sets with the most misclassified outputs are given heavier weights. These are considered to be data that have more complexity and requires more iterations to properly train the model. So therefore, using boosting on a model with a higher error rate will help the model to predict with better accuracy. Helpful with decision trees in general where, improper condition and rule setting could lead to inaccurate predictions. 
+
+
+```

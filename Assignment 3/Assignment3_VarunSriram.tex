@@ -1,0 +1,617 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={R Notebook},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{R Notebook}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{}
+    \preauthor{}\postauthor{}
+    \date{}
+    \predate{}\postdate{}
+  
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# 1, 2 already done}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Queston 3}
+
+\CommentTok{#Read the data from a cvs file, and convert every character vector to a factor wherever possible}
+\NormalTok{cancer <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"prostate_cancer.csv"}\NormalTok{, }\DataTypeTok{stringsAsFactors =} \OtherTok{FALSE}\NormalTok{)}
+
+\CommentTok{#check if the data is properly imported and structured or not}
+\KeywordTok{str}\NormalTok{(cancer)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 'data.frame':    100 obs. of  10 variables:
+##  $ id               : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ diagnosis_result : chr  "M" "B" "M" "M" ...
+##  $ radius           : int  23 9 21 14 9 25 16 15 19 25 ...
+##  $ texture          : int  12 13 27 16 19 25 26 18 24 11 ...
+##  $ perimeter        : int  151 133 130 78 135 83 120 90 88 84 ...
+##  $ area             : int  954 1326 1203 386 1297 477 1040 578 520 476 ...
+##  $ smoothness       : num  0.143 0.143 0.125 0.07 0.141 0.128 0.095 0.119 0.127 0.119 ...
+##  $ compactness      : num  0.278 0.079 0.16 0.284 0.133 0.17 0.109 0.165 0.193 0.24 ...
+##  $ symmetry         : num  0.242 0.181 0.207 0.26 0.181 0.209 0.179 0.22 0.235 0.203 ...
+##  $ fractal_dimension: num  0.079 0.057 0.06 0.097 0.059 0.076 0.057 0.075 0.074 0.082 ...
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{head}\NormalTok{(cancer)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   id diagnosis_result radius texture perimeter area smoothness compactness
+## 1  1                M     23      12       151  954      0.143       0.278
+## 2  2                B      9      13       133 1326      0.143       0.079
+## 3  3                M     21      27       130 1203      0.125       0.160
+## 4  4                M     14      16        78  386      0.070       0.284
+## 5  5                M      9      19       135 1297      0.141       0.133
+## 6  6                B     25      25        83  477      0.128       0.170
+##   symmetry fractal_dimension
+## 1    0.242             0.079
+## 2    0.181             0.057
+## 3    0.207             0.060
+## 4    0.260             0.097
+## 5    0.181             0.059
+## 6    0.209             0.076
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#remove ID because it is an extra column to the data frame and is redundant}
+\NormalTok{cancer <-}\StringTok{ }\NormalTok{cancer[}\OperatorTok{-}\DecValTok{1}\NormalTok{]}
+
+\CommentTok{#check if the ID column is removed}
+\KeywordTok{head}\NormalTok{(cancer)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   diagnosis_result radius texture perimeter area smoothness compactness
+## 1                M     23      12       151  954      0.143       0.278
+## 2                B      9      13       133 1326      0.143       0.079
+## 3                M     21      27       130 1203      0.125       0.160
+## 4                M     14      16        78  386      0.070       0.284
+## 5                M      9      19       135 1297      0.141       0.133
+## 6                B     25      25        83  477      0.128       0.170
+##   symmetry fractal_dimension
+## 1    0.242             0.079
+## 2    0.181             0.057
+## 3    0.207             0.060
+## 4    0.260             0.097
+## 5    0.181             0.059
+## 6    0.209             0.076
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Get the number of patients in table}
+\KeywordTok{table}\NormalTok{(cancer}\OperatorTok{$}\NormalTok{diagnosis_result)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  B  M 
+## 38 62
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Rename B to benign and M to malignant in the column diagnosis}
+\NormalTok{cancer}\OperatorTok{$}\NormalTok{diagnosis <-}\StringTok{ }\KeywordTok{factor}\NormalTok{(cancer}\OperatorTok{$}\NormalTok{diagnosis_result, }\DataTypeTok{levels =} \KeywordTok{c}\NormalTok{(}\StringTok{"B"}\NormalTok{, }\StringTok{"M"}\NormalTok{), }\DataTypeTok{labels =} \KeywordTok{c}\NormalTok{(}\StringTok{"Benign"}\NormalTok{, }\StringTok{"Malignant"}\NormalTok{))}
+
+\CommentTok{#Gives the result of B/ to all cases in percentage form rounded of to 1 decimal place}
+\KeywordTok{round}\NormalTok{(}\KeywordTok{prop.table}\NormalTok{(}\KeywordTok{table}\NormalTok{(cancer}\OperatorTok{$}\NormalTok{diagnosis)) }\OperatorTok{*}\StringTok{ }\DecValTok{100}\NormalTok{, }\DataTypeTok{digits=}\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##    Benign Malignant 
+##        38        62
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Normalizing is the process of bringing all values to a common scale. It's vital because the presence of values in various scales can hinder the process of kNN or data analysis in general and might yield wrong results}
+\CommentTok{#Here we create a normalize funtion}
+\NormalTok{normalize <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(x)}
+\NormalTok{\{}
+  \KeywordTok{return}\NormalTok{((x}\OperatorTok{-}\KeywordTok{min}\NormalTok{(x))}\OperatorTok{/}\NormalTok{(}\KeywordTok{max}\NormalTok{(x)}\OperatorTok{-}\KeywordTok{min}\NormalTok{(x)))}
+\NormalTok{\}}
+
+
+\CommentTok{#Getting a normailized data frame by passing cancer(data frame) values to the normalize function written above}
+\NormalTok{cancer_normalized <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{lapply}\NormalTok{(cancer[}\DecValTok{2}\OperatorTok{:}\DecValTok{9}\NormalTok{], normalize))}
+
+\CommentTok{#check if the function is normalized}
+\KeywordTok{summary}\NormalTok{(cancer_normalized)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      radius          texture         perimeter           area       
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.1875   1st Qu.:0.1875   1st Qu.:0.2542   1st Qu.:0.1639  
+##  Median :0.5000   Median :0.4062   Median :0.3500   Median :0.2637  
+##  Mean   :0.4906   Mean   :0.4519   Mean   :0.3732   Mean   :0.2989  
+##  3rd Qu.:0.7500   3rd Qu.:0.7031   3rd Qu.:0.5188   3rd Qu.:0.4266  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
+##    smoothness      compactness        symmetry      fractal_dimension
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   
+##  1st Qu.:0.3219   1st Qu.:0.1384   1st Qu.:0.2189   1st Qu.:0.1364   
+##  Median :0.4384   Median :0.2622   Median :0.3254   Median :0.2273   
+##  Mean   :0.4484   Mean   :0.2889   Mean   :0.3442   Mean   :0.2657   
+##  3rd Qu.:0.5753   3rd Qu.:0.3876   3rd Qu.:0.4379   3rd Qu.:0.3636   
+##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Creating to data sets, one for training and other for testing. I chose 50-50 rows for each set for consistency}
+\NormalTok{cancer_training <-}\StringTok{ }\NormalTok{cancer_normalized[}\DecValTok{1}\OperatorTok{:}\DecValTok{50}\NormalTok{,]}
+\NormalTok{cancer_test <-}\StringTok{ }\NormalTok{cancer_normalized[}\DecValTok{51}\OperatorTok{:}\DecValTok{100}\NormalTok{,]}
+
+\CommentTok{#Target variable which has not been included in our training and test data will be included}
+\NormalTok{cancer_training_labels <-}\StringTok{ }\NormalTok{cancer[}\DecValTok{1}\OperatorTok{:}\DecValTok{50}\NormalTok{,}\DecValTok{1}\NormalTok{]}
+\NormalTok{cancer_test_labels <-}\StringTok{ }\NormalTok{cancer[}\DecValTok{51}\OperatorTok{:}\DecValTok{100}\NormalTok{,}\DecValTok{1}\NormalTok{]}
+
+\CommentTok{#kNN is part of package "class"}
+\KeywordTok{library}\NormalTok{(class)}
+
+\CommentTok{#using kNN() function to classify test data for various values of k}
+\NormalTok{cancer_test_prediction <-}\StringTok{ }\KeywordTok{knn}\NormalTok{(}\DataTypeTok{train =}\NormalTok{ cancer_training, }\DataTypeTok{test=}\NormalTok{cancer_test, }\DataTypeTok{cl=}\NormalTok{cancer_test_labels, }\DataTypeTok{k=}\DecValTok{10}\NormalTok{)}
+\NormalTok{cancer_test_prediction2 <-}\StringTok{ }\KeywordTok{knn}\NormalTok{(}\DataTypeTok{train =}\NormalTok{ cancer_training, }\DataTypeTok{test=}\NormalTok{cancer_test, }\DataTypeTok{cl=}\NormalTok{cancer_test_labels, }\DataTypeTok{k=}\DecValTok{9}\NormalTok{)}
+\NormalTok{cancer_test_prediction3 <-}\StringTok{ }\KeywordTok{knn}\NormalTok{(}\DataTypeTok{train =}\NormalTok{ cancer_training, }\DataTypeTok{test=}\NormalTok{cancer_test, }\DataTypeTok{cl=}\NormalTok{cancer_test_labels, }\DataTypeTok{k=}\DecValTok{8}\NormalTok{)}
+\NormalTok{cancer_test_prediction4 <-}\StringTok{ }\KeywordTok{knn}\NormalTok{(}\DataTypeTok{train =}\NormalTok{ cancer_training, }\DataTypeTok{test=}\NormalTok{cancer_test, }\DataTypeTok{cl=}\NormalTok{cancer_test_labels, }\DataTypeTok{k=}\DecValTok{7}\NormalTok{)}
+
+\CommentTok{#The cross table shows the accuracy of all models (4 here).}
+\KeywordTok{library}\NormalTok{(gmodels)}
+\KeywordTok{CrossTable}\NormalTok{(}\DataTypeTok{x=}\NormalTok{cancer_test_labels, }\DataTypeTok{y =}\NormalTok{cancer_test_prediction, }\DataTypeTok{prop.chisq=}\OtherTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |           N / Row Total |
+## |           N / Col Total |
+## |         N / Table Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  50 
+## 
+##  
+##                    | cancer_test_prediction 
+## cancer_test_labels |         B |         M | Row Total | 
+## -------------------|-----------|-----------|-----------|
+##                  B |        26 |         2 |        28 | 
+##                    |     0.929 |     0.071 |     0.560 | 
+##                    |     0.619 |     0.250 |           | 
+##                    |     0.520 |     0.040 |           | 
+## -------------------|-----------|-----------|-----------|
+##                  M |        16 |         6 |        22 | 
+##                    |     0.727 |     0.273 |     0.440 | 
+##                    |     0.381 |     0.750 |           | 
+##                    |     0.320 |     0.120 |           | 
+## -------------------|-----------|-----------|-----------|
+##       Column Total |        42 |         8 |        50 | 
+##                    |     0.840 |     0.160 |           | 
+## -------------------|-----------|-----------|-----------|
+## 
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{CrossTable}\NormalTok{(}\DataTypeTok{x=}\NormalTok{cancer_test_labels, }\DataTypeTok{y =}\NormalTok{cancer_test_prediction2, }\DataTypeTok{prop.chisq=}\OtherTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |           N / Row Total |
+## |           N / Col Total |
+## |         N / Table Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  50 
+## 
+##  
+##                    | cancer_test_prediction2 
+## cancer_test_labels |         B |         M | Row Total | 
+## -------------------|-----------|-----------|-----------|
+##                  B |        26 |         2 |        28 | 
+##                    |     0.929 |     0.071 |     0.560 | 
+##                    |     0.667 |     0.182 |           | 
+##                    |     0.520 |     0.040 |           | 
+## -------------------|-----------|-----------|-----------|
+##                  M |        13 |         9 |        22 | 
+##                    |     0.591 |     0.409 |     0.440 | 
+##                    |     0.333 |     0.818 |           | 
+##                    |     0.260 |     0.180 |           | 
+## -------------------|-----------|-----------|-----------|
+##       Column Total |        39 |        11 |        50 | 
+##                    |     0.780 |     0.220 |           | 
+## -------------------|-----------|-----------|-----------|
+## 
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{CrossTable}\NormalTok{(}\DataTypeTok{x=}\NormalTok{cancer_test_labels, }\DataTypeTok{y =}\NormalTok{cancer_test_prediction3, }\DataTypeTok{prop.chisq=}\OtherTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |           N / Row Total |
+## |           N / Col Total |
+## |         N / Table Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  50 
+## 
+##  
+##                    | cancer_test_prediction3 
+## cancer_test_labels |         B |         M | Row Total | 
+## -------------------|-----------|-----------|-----------|
+##                  B |        25 |         3 |        28 | 
+##                    |     0.893 |     0.107 |     0.560 | 
+##                    |     0.568 |     0.500 |           | 
+##                    |     0.500 |     0.060 |           | 
+## -------------------|-----------|-----------|-----------|
+##                  M |        19 |         3 |        22 | 
+##                    |     0.864 |     0.136 |     0.440 | 
+##                    |     0.432 |     0.500 |           | 
+##                    |     0.380 |     0.060 |           | 
+## -------------------|-----------|-----------|-----------|
+##       Column Total |        44 |         6 |        50 | 
+##                    |     0.880 |     0.120 |           | 
+## -------------------|-----------|-----------|-----------|
+## 
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{CrossTable}\NormalTok{(}\DataTypeTok{x=}\NormalTok{cancer_test_labels, }\DataTypeTok{y =}\NormalTok{cancer_test_prediction4, }\DataTypeTok{prop.chisq=}\OtherTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |           N / Row Total |
+## |           N / Col Total |
+## |         N / Table Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  50 
+## 
+##  
+##                    | cancer_test_prediction4 
+## cancer_test_labels |         B |         M | Row Total | 
+## -------------------|-----------|-----------|-----------|
+##                  B |        25 |         3 |        28 | 
+##                    |     0.893 |     0.107 |     0.560 | 
+##                    |     0.595 |     0.375 |           | 
+##                    |     0.500 |     0.060 |           | 
+## -------------------|-----------|-----------|-----------|
+##                  M |        17 |         5 |        22 | 
+##                    |     0.773 |     0.227 |     0.440 | 
+##                    |     0.405 |     0.625 |           | 
+##                    |     0.340 |     0.100 |           | 
+## -------------------|-----------|-----------|-----------|
+##       Column Total |        42 |         8 |        50 | 
+##                    |     0.840 |     0.160 |           | 
+## -------------------|-----------|-----------|-----------|
+## 
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#We can conclude that k=7(cancer_test_prediction4) has the best accuracy.}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Question 4 }
+
+\CommentTok{#importing library caret}
+\KeywordTok{library}\NormalTok{(caret)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: lattice
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: ggplot2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(ggplot2)}
+\KeywordTok{library}\NormalTok{(lattice)}
+\CommentTok{#Splitting data into training and test}
+\CommentTok{#Using the matrix from the previous question}
+\CommentTok{#using a seed with hard coded value to maintain consistency throughout the kNN process for multiple runs }
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{2018}\NormalTok{)}
+
+\CommentTok{#createDatapartition takes vector value, which takes 0.5 "50%" of the data rows and stores in index}
+\NormalTok{index <-}\StringTok{ }\KeywordTok{createDataPartition}\NormalTok{(}\DataTypeTok{y=}\NormalTok{cancer}\OperatorTok{$}\NormalTok{diagnosis_result, }\DataTypeTok{p=}\FloatTok{0.5}\NormalTok{,}\DataTypeTok{list=}\OtherTok{FALSE}\NormalTok{)}
+
+\CommentTok{#create training set using index}
+\NormalTok{caret_training <-}\StringTok{ }\NormalTok{cancer[index,]}
+
+\CommentTok{#create test data set using -index = other rows excluding index rows}
+\NormalTok{caret_test <-}\StringTok{ }\NormalTok{cancer[}\OperatorTok{-}\NormalTok{index,]}
+
+\CommentTok{#dim(caret_test);dim(caret_training);}
+\CommentTok{#caret_test}
+
+\CommentTok{#The original dataset has 2 values, Benign and Malignant, they should be considered categorical variables.To convert these to categorical variables, we can convert them to factors.}
+\NormalTok{caret_training[[}\StringTok{"diagnosis"}\NormalTok{]]=}\KeywordTok{factor}\NormalTok{(caret_training[[}\StringTok{"diagnosis"}\NormalTok{]])}
+
+
+\CommentTok{#Caret package provides train() function for training the data . Before the train() function is used, we implement trainControl() method first as it controls the computational nuances of the train() method.}
+
+\CommentTok{#Below: The process of splitting the data into k-folds can be repeated a number of times, this is called Repeated k-fold Cross Validation. The final model accuracy is taken as the mean from the number of repeats. I feel that an iterative approach to find k is the best solution since kNN is simple and finding the right k requires trial and error.}
+
+\NormalTok{training_control <-}\StringTok{ }\KeywordTok{trainControl}\NormalTok{(}\DataTypeTok{method =} \StringTok{"repeatedcv"}\NormalTok{, }\DataTypeTok{number=}\DecValTok{10}\NormalTok{, }\DataTypeTok{repeats =} \DecValTok{3}\NormalTok{)}
+
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{2017}\NormalTok{)}
+
+\CommentTok{#Doing the kNN process here, prepocessing the data in this scnario: "center"" sets mean value as 1 and "scale" sets Standard deviation to 1 . Tuning holds an integer value which checks the number of different k values to check.}
+\NormalTok{knn_caret <-}\StringTok{ }\KeywordTok{train}\NormalTok{(diagnosis }\OperatorTok{~}\NormalTok{.,}\DataTypeTok{data=}\NormalTok{caret_training,}\DataTypeTok{method=}\StringTok{"knn"}\NormalTok{,}\DataTypeTok{trControl=}\NormalTok{training_control,}\DataTypeTok{preProcess=}\KeywordTok{c}\NormalTok{(}\StringTok{"center"}\NormalTok{,}\StringTok{"scale"}\NormalTok{),}\DataTypeTok{tuneLength=}\DecValTok{10}\NormalTok{ )}
+
+\NormalTok{knn_caret}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## k-Nearest Neighbors 
+## 
+## 50 samples
+##  9 predictor
+##  2 classes: 'Benign', 'Malignant' 
+## 
+## Pre-processing: centered (9), scaled (9) 
+## Resampling: Cross-Validated (10 fold, repeated 3 times) 
+## Summary of sample sizes: 45, 45, 45, 45, 46, 45, ... 
+## Resampling results across tuning parameters:
+## 
+##   k   Accuracy   Kappa    
+##    5  0.9727778  0.9252525
+##    7  0.9727778  0.9220779
+##    9  0.9527778  0.8766234
+##   11  0.9472222  0.8575758
+##   13  0.9327778  0.8281385
+##   15  0.9272222  0.8168831
+##   17  0.9205556  0.8040626
+##   19  0.9138889  0.7865801
+##   21  0.9072222  0.7683983
+##   23  0.8872222  0.7259740
+## 
+## Accuracy was used to select the optimal model using the largest value.
+## The final value used for the model was k = 7.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{caret_test_pred <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(knn_caret, }\DataTypeTok{newdata =}\NormalTok{ caret_test)}
+\NormalTok{caret_test_pred}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] Malignant Benign    Malignant Malignant Malignant Malignant Malignant
+##  [8] Malignant Malignant Malignant Benign    Malignant Malignant Malignant
+## [15] Malignant Malignant Malignant Malignant Malignant Malignant Malignant
+## [22] Malignant Malignant Benign    Malignant Benign    Benign    Malignant
+## [29] Malignant Benign    Benign    Malignant Benign    Benign    Benign   
+## [36] Malignant Benign    Malignant Benign    Malignant Benign    Malignant
+## [43] Benign    Malignant Malignant Benign    Malignant Malignant Benign   
+## [50] Benign   
+## Levels: Benign Malignant
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Checking the accuracy of k in both versions, caret package has an accuracy of 0.97 to 0.84(in the previous ques) when k=7 and the former has a better accuracy overall.}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Question 6}
+
+\KeywordTok{confusionMatrix}\NormalTok{(caret_test_pred, caret_test}\OperatorTok{$}\NormalTok{diagnosis)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Confusion Matrix and Statistics
+## 
+##            Reference
+## Prediction  Benign Malignant
+##   Benign        17         0
+##   Malignant      2        31
+##                                           
+##                Accuracy : 0.96            
+##                  95% CI : (0.8629, 0.9951)
+##     No Information Rate : 0.62            
+##     P-Value [Acc > NIR] : 2.048e-08       
+##                                           
+##                   Kappa : 0.9133          
+##  Mcnemar's Test P-Value : 0.4795          
+##                                           
+##             Sensitivity : 0.8947          
+##             Specificity : 1.0000          
+##          Pos Pred Value : 1.0000          
+##          Neg Pred Value : 0.9394          
+##              Prevalence : 0.3800          
+##          Detection Rate : 0.3400          
+##    Detection Prevalence : 0.3400          
+##       Balanced Accuracy : 0.9474          
+##                                           
+##        'Positive' Class : Benign          
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#using the confusion matrix, our model is at an accuracy of 96%.}
+\end{Highlighting}
+\end{Shaded}
+
+
+\end{document}

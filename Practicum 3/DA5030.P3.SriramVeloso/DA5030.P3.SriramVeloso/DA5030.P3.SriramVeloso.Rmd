@@ -1,0 +1,55 @@
+---
+title: "Practicum3"
+author: "Varun Sriram"
+date: "November 20, 2018"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+
+Problem 2
+
+```{r}
+#Question 2
+library(cluster)
+library(arules)
+
+plant <- read.transactions("plants.data", sep=",") #Checked R documentation for this function. It was a .data set since the start and thought of using it the same way
+summary(plant)
+plant
+inspect(plant[1:6])
+dim(plant)
+#Now we create col names, I manually counted the max number of occurences of a genus and it came to 15
+image(plant[1:6])
+itemFrequencyPlot(plant, topN=20) #Notes the top 20 categories
+plantrules <- apriori(plant, parameter = list(support = .09, confidence = 0.75, minlen = 3)) 
+#RELIABLE PERCENTAGE of 9 percent aka appears at least ~3130 times/minimum threshold = support, rules should appear correct ~75 percent of the time = confidence.
+#There should at least be 3 categories that occured with the thresholds put altogether
+plantrulesmin <- apriori(plant, parameter = list(support = .1, confidence = 0.25, minlen = 2)) 
+#Same as above but There should be at least 2 categories put altogether
+summary(plantrules)
+inspect(plantrules[1:5])
+inspect(plantrulesmin[1:5]) #noting how nv despite being the top 5 categories occuring did not appear the top 10 when there is a minimum of 3 categories involved
+inspect(sort(plantrules), by = "lift") #using minlen = 3 version for simplicity - essentially order of likely occurence over others
+plantrules_df<-as(plantrules, "data.frame")
+plants_k<-kmeans(plantrules_df[,2:4],2)
+summary(plants_k$cluster) #clusters succuessfully classified
+table(plants_k$cluster)
+plantrules_df$cluster<-plants_k$cluster #Add clusters to the original dataframe conveniently in the same row
+plantrules_df$rownum<-1:nrow(plantrules_df) #Add rownumbers for future labeling/graph usage
+library(ggplot2)
+itemFrequencyPlot(plant, topN=20) #Notes the top 20 categories
+ggplot(plantrules_df, aes(x=confidence, y=lift)) +
+  geom_point() + geom_rug() + geom_label(label = plantrules_df$cluster)
+ggplot(plantrules_df, aes(x=confidence, y=lift)) +
+  geom_point() + geom_rug() + geom_label(label = plantrules_df$rownum) #checking row numbers of lift and thereby item frequency
+plantrules_df[1421,] #checking row clearly in cluster 1
+plantrules_df[91,] #checking row clearly in cluster 2
+#kmeans found it best to simply cluster according to lift above everything
+#Noted that those in cluster 2 had the top 20 categorical variables that actually appear (in the rhs section) while those in cluster 1 do not.
+#This means clusters that had categories are in the top 20 that at least had a minimum of 3 categories apparently do not occur as often regardless of confidence level-
+#compared to more "rarer" states. Popular states that have more plants in general but had very few variations/categories compared to states that had less plants but had more variations.
+```
+
+

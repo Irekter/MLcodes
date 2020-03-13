@@ -1,0 +1,168 @@
+---
+title: "Assignment 7 DA5030"
+author: "Varun Sriram"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+---
+
+
+```{r Problem 1}
+
+#Question 1
+
+#reading the concrete dataset
+concrete<-read.csv("concrete.csv")
+str(concrete)
+
+
+#Function to calculate min max normalization
+normalize<-function(x){
+  return((x-min(x))/(max(x)-min(x)))
+} 
+
+#applying normalization and storing to new data frame
+concrete_norm<-as.data.frame(lapply(concrete,normalize))
+summary(concrete_norm$strength)
+
+#Creating training and test data sets
+concrete_train<-concrete_norm[1:773,] 
+concrete_test<-concrete_norm[774:1030,]
+
+
+#installing and using neuralnet package
+library(neuralnet)
+
+#A test with a neural network made with a single neuron with many features taken to consideration for strength attribute
+concrete_model<-neuralnet(strength~cement+slag+ash+water+superplastic+coarseagg+fineagg+age,data=concrete_train)
+
+plot(concrete_model)
+
+
+#making small tests
+model_results<-compute(concrete_model,concrete_test[1:8])
+predicted_strength<-model_results$net.result
+
+#checking correlation - of ~.72 which is shows these values are fairly correlated to the ACTUAL data
+cor(predicted_strength,concrete_test$strength)
+
+#this newly added model uses 5 neurons to calculate final gradients to find a better prediction algorithim for strength
+concrete_model2<-neuralnet(strength~cement+slag+ash+water+superplastic+coarseagg+fineagg+age,data=concrete_train,hidden=5)
+
+plot(concrete_model2)
+
+#making small tests
+model_results2<-compute(concrete_model2,concrete_test[1:8]) 
+predicted_strength2<-model_results2$net.result
+cor(predicted_strength2,concrete_test$strength) 
+
+#The correlation increased from ~.72 to ~.76 - this shows this models helped SLIGHTLY increase correlation towards the actual data
+```
+
+```{r Problem 2}
+#Question 2
+
+#Reading in the data set
+letters<-read.csv("letterdata.csv")
+str(letters)
+
+#creating data set, 80:20 training to testing data
+letters_train<-letters[1:16000,] 
+letters_test<-letters[16001:20000,]
+
+#installing and using the kernlab package
+library(kernlab)
+
+#Using the SVM function on all the features to check letter note this kernel separator is linear/vanilla by default
+letter_classifier<-ksvm(letter~.,data=letters_train,kernel="vanilladot") 
+
+letter_classifier
+#the training error is about .13 percent
+
+#prediction using svm
+letter_predictions<-predict(letter_classifier,letters_test)
+head(letter_predictions)
+
+#small errors/misclassifiations spotted beyond the "correct diagonal"
+table(letter_predictions,letters_test$letter) 
+
+
+#a bool operator to compare accuracy of classifications
+agreement<-letter_predictions==letters_test$letter 
+table(agreement)
+#similiar error rate of 16% of predicted 13% error in training data
+prop.table(table(agreement)) 
+
+
+#using rbf kernel algorithim to separate classifications alternatively.
+letter_classifier_rbf<-ksvm(letter~., data = letters_train, kernel = "rbfdot") 
+letter_predictions_rbf<-predict(letter_classifier_rbf,letters_test)
+
+#bool to compare accuracy of classifications
+agreement_rbf<-letter_predictions_rbf==letters_test$letter 
+table(agreement_rbf)
+prop.table(table(agreement_rbf)) 
+#a much better error rate of .07 percent.
+```
+
+```{r Problem 3 Step 2}
+#Question 3
+
+#importing library arules
+library(arules)
+
+#reading csv file
+groceries<-read.transactions("groceries.csv", sep = ",")#function taken from arules to read csvs into a matrix
+summary(groceries)
+
+#easily inspect "grocery bags" from special function "inspect"
+inspect(groceries[1:5])
+
+#able to see frequency of specific columns using itemFrequency
+itemFrequency(groceries[,1:3])
+
+#lists items that are present with at least 10 percent support
+itemFrequencyPlot(groceries, support=.1) 
+
+
+#shows the top 20 items selected in the groceries data
+itemFrequencyPlot(groceries,topN=20)
+
+#this image shows within only 5 transactions there are 150+ unique items in the dataset
+image(groceries[1:5]) 
+
+#creates an image/matrix of 100 rows wuth the unique items present
+image(sample(groceries,100)) 
+
+
+#default settings of support =1 and confidence =.8
+apriori(groceries)
+
+#when executed no rules were made - so we need to be more specific beyond our default assumptions
+
+groceryrules<-apriori(groceries,parameter=list(support=0.006,confidence=0.25,minlen =2))
+groceryrules 
+#the above modified version made 463 rules thus creating more reasonable parameters beyond the default to classify
+
+
+summary(groceryrules) 
+#inspecting the rules and their probabilities 
+inspect(groceryrules[1:3]) 
+
+#list the top 5 highest things likely to be bought together aka top 5 lifts
+inspect(sort(groceryrules, by = "lift")[1:5]) 
+
+#looking for rows containing "berries" specifically
+berryrules<- subset(groceryrules, items %in% "berries") 
+inspect(berryrules) 
+#berries are part of breakfast or snack according to the summary
+
+#makes a csv file to store rules that can be used outside at spreadsheet programs
+write(groceryrules, file ="groceryrules.csv", sep = ",", quote = TRUE, row.names = FALSE)
+
+#input current rules into data frame
+groceryrules_df<-as(groceryrules, "data.frame")
+
+str(groceryrules_df)
+```

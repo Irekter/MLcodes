@@ -1,0 +1,46 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+Problem 2
+
+```{r}
+#Question 2
+library(reshape2)
+library(stats)
+library(cluster)
+library(psych)
+library(rgl)
+library(arules)
+
+plant <- read.transactions("plants.data", sep=",") #Checked R documentation for this function. It was a .data set since the start and thought of using it the same way
+summary(plant)
+plant
+inspect(plant[1:6])
+dim(plant)
+#Now we create col names, I manually counted the max number of occurences of a genus and it came to 15
+image(plant[1:6])
+itemFrequencyPlot(plant, topN=20) #Notes the top 20 categories
+plantrules <- apriori(plant, parameter = list(support = .09, confidence = 0.75, minlen = 3)) 
+#RELIABLE PERCENTAGE of 5 percent aka appears at least ~1740 times/minimum threshold = support, rules should appear correct ~75 percent of the time = confidence.
+#There should at least be 3 categories that occured with the thresholds put altogether
+plantrulesmin <- apriori(plant, parameter = list(support = .1, confidence = 0.25, minlen = 2)) 
+#Same as above but There should be at least 2 categories put altogether
+summary(plantrules)
+inspect(plantrules[1:5])
+inspect(plantrulesmin[1:5]) #noting how nv despite being the top 5 categories occuring did not appear the top 10 when there is a minimum of 3 categories involved
+inspect(sort(plantrules), by = "lift") #using minlen = 3 version for simplicity - essentially order of likely occurence over others
+plantrules_df<-as(plantrules, "data.frame")
+plants_k<-kmeans(plantrules_df[,2:5],2)
+summary(plants_k$cluster) #clusters succuessfully classified
+table(plants_k$cluster)
+plantrules_df$cluster<-plants_k$cluster
+library(ggplot2)
+ggplot(plantrules_df, aes(x=confidence, y=cluster)) +
+  geom_point() + geom_rug() + geom_label(label = plantrules_df$count)
+#kmeans found it best to simply cluster according to count above everything
+```
+
+
